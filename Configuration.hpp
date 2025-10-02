@@ -266,6 +266,8 @@
     #include "boards/AVR_MKS_GEN_L_V2/pins_MKS_GEN_L_V2.h"
 #elif (BOARD == BOARD_AVR_MKS_GEN_L_V21)
     #include "boards/AVR_MKS_GEN_L_V21/pins_MKS_GEN_L_V21.h"
+#elif (BOARD == BOARD_BTT_SKR_MINI_E3_V3_0)
+    #include "boards/BTT_SKR_MINI_E3_V3_0/pins_BTT_SKR_MINI_E3_V3_0.h"
 #endif
 
 #include "Configuration_adv.hpp"
