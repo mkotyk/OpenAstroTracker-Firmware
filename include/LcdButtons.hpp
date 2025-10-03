@@ -1,7 +1,7 @@
 #ifndef LCDBUTTONS_HPP_
 #define LCDBUTTONS_HPP_
 
-#include "inc/Globals.hpp"
+#include "Globals.hpp"
 
 // LCD shield buttons
 enum lcdButton_t

@@ -1,4 +1,4 @@
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
 #include "EPROMStore.hpp"
 #include "LcdMenu.hpp"
@@ -6,7 +6,7 @@
 #include "EndSwitches.hpp"
 #include "Mount.hpp"
 #include "Sidereal.hpp"
-#include "libs/MappedDict/MappedDict.hpp"
+#include "MappedDict.hpp"
 
 PUSH_NO_WARNINGS
 #ifdef NEW_STEPPER_LIB

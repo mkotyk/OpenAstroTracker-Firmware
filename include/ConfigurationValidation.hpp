@@ -19,6 +19,8 @@
 // Platform
 #if defined(ESP32) || defined(__AVR_ATmega2560__)
 // Valid platform
+#elif (BOARD == BOARD_BTT_SKR_MINI_E3_V3_0)
+// Valid
 #else
     #error Unsupported platform configuration. Use at own risk.
 #endif
@@ -26,6 +28,7 @@
 // Display & keypad configurations
 #if defined(ESP32) && ((DISPLAY_TYPE == DISPLAY_TYPE_NONE) || (DISPLAY_TYPE == DISPLAY_TYPE_LCD_JOY_I2C_SSD1306))
 // Valid display for ESP32
+#elif BOARD == BOARD_BTT_SKR_MINI_E3_V3_0 && DISPLAY_TYPE == DISPLAY_TYPE_NONE
 #elif defined(__AVR_ATmega2560__)                                                                                                          \
     && ((DISPLAY_TYPE == DISPLAY_TYPE_NONE) || (DISPLAY_TYPE == DISPLAY_TYPE_LCD_KEYPAD) || (DISPLAY_TYPE_LCD_KEYPAD_I2C_MCP23008)         \
         || (DISPLAY_TYPE_LCD_KEYPAD_I2C_MCP23017))

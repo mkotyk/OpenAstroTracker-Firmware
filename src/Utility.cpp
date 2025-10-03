@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
 
 #if DEBUG_LEVEL > 0

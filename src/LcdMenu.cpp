@@ -1,7 +1,7 @@
-#include "inc/Globals.hpp"
-#include "../Configuration.hpp"
+#include "Globals.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
-#include "libs/MappedDict/MappedDict.hpp"
+#include "MappedDict.hpp"
 #include "EPROMStore.hpp"
 #include "LcdMenu.hpp"
 

@@ -1,8 +1,8 @@
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
 #include "EPROMStore.hpp"
 #include "HallSensorHoming.hpp"
-#include "libs/MappedDict/MappedDict.hpp"
+#include "MappedDict.hpp"
 
 #define HOMING_START_PIN_POSITION 0
 #define HOMING_END_PIN_POSITION   1

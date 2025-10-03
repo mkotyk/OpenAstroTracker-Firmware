@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 
 #ifdef NEW_STEPPER_LIB
 

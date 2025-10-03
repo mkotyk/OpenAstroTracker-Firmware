@@ -1,6 +1,26 @@
 # OpenAstroTracker-Firmware
 Official firmware for the OpenAstroTracker. Other important resources can be found [here](https://wiki.openastrotech.com/en/Links).
 
+
+## Fork notes:
+
+🚨 You probably don't want this fork unless you're using a **BigTreeTech SKR MINI E3 V3.0**!  No
+other platforms are maintained or tested in this fork.
+
+- I've restructured this project to make it work in my environment.  PlatformIO was choking on the
+  directory structure and/or the ini file.  _"Human sacrifice, ~~dogs~~ headers and ~~cats~~ sources living together... MASS HYSTERIA!"._
+- Started with a fresh `pio project init`, then moved files into the correct places.
+- Moved all the cluttering python scripts out of the top level
+- Moved all the gorpy configuration headers out of the top level
+- Not really interested in upstreaming this work or any critiques, I'm just scratching my own itch.
+
+## Notes about the BigTreeTech SKR MINI E3 V3.0
+- This is a neat little 3D Printer controller available on Amazon for a very low price.
+- It features an STM32G0B1 Arm Cortex-M processor with 512K flash and 144K ram
+- It includes 4 TMC2209 stepper drivers under a nice clean heatsink.  They are UART enabled utilizing hardware serial port 4, all chained together with fixed identifier ids
+- It is quite small and fits inside the lower 2020 frame of the OAT
+- It has a microsd card slot, and a variety of expansion headers for LCDs, GPS, compass etc
+
 ## Change log
 See the [Changelog](Changelog.md) for details about what versions made what changes.
 

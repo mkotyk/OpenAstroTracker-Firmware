@@ -1,5 +1,5 @@
 #pragma once
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 
 #include "Sidereal.hpp"
 

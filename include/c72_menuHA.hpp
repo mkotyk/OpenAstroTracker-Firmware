@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "EPROMStore.hpp"
 
 #if DISPLAY_TYPE > 0

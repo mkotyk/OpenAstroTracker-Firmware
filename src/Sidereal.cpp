@@ -1,5 +1,5 @@
-#include "inc/Globals.hpp"
-#include "../Configuration.hpp"
+#include "Globals.hpp"
+#include "Configuration.hpp"
 #include "Sidereal.hpp"
 
 // Constants for sidereal calculation

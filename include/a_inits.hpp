@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Configuration.hpp"
-#include "inc/Globals.hpp"
+#include "Configuration.hpp"
+#include "Globals.hpp"
 
 #ifndef NEW_STEPPER_LIB
 PUSH_NO_WARNINGS

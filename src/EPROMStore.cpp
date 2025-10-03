@@ -1,9 +1,9 @@
-#include "inc/Globals.hpp"
+#include "Globals.hpp"
 PUSH_NO_WARNINGS
 #include <EEPROM.h>
 POP_NO_WARNINGS
 
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
 #include "EPROMStore.hpp"
 

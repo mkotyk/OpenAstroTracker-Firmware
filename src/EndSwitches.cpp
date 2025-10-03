@@ -1,8 +1,8 @@
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
 #include "EPROMStore.hpp"
 #include "EndSwitches.hpp"
-#include "libs/MappedDict/MappedDict.hpp"
+#include "MappedDict.hpp"
 
 #if (USE_RA_END_SWITCH == 1 || USE_DEC_END_SWITCH == 1)
 

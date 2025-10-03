@@ -3,7 +3,7 @@
 #include "Utility.hpp"
 #include "Version.h"
 #include "fonts128x64.h"
-#include "Mount.hpp"
+#include "../src/Mount.hpp"
 #include "InfoDisplayRender.hpp"
 
 #if defined(ESP32)

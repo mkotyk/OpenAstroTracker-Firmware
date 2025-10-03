@@ -1,4 +1,4 @@
-#include "../Configuration.hpp"
+#include "Configuration.hpp"
 #include "Utility.hpp"
 #include "WifiControl.hpp"
 #include "MeadeCommandProcessor.hpp"
