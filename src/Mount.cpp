@@ -13,6 +13,8 @@ PUSH_NO_WARNINGS
     #ifdef __AVR_ATmega2560__
         #include "InterruptAccelStepper.h"
         #include "StepperConfiguration.hpp"
+    #elif defined(ARDUIO_ARCH_STM32)
+#include "StepperConfiguration.hpp"
     #endif
 #endif
 
@@ -446,6 +448,7 @@ bool Mount::connectToDriver(const String &driverKind, uint16_t *rmsCurrent)
             }
             else
             {
+                LOG(DEBUG_STEPPERS, "[STEPPERS]: UART connection failed");
                 delay(500);
             }
         }

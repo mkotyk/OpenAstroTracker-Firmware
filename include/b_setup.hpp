@@ -177,7 +177,7 @@ void setup()
     // include TMC2209 UART pins
     pinMode(RA_DIAG_PIN, INPUT);
     #ifdef RA_SERIAL_PORT
-    RA_SERIAL_PORT.begin(57600);  // Start HardwareSerial comms with driver
+    RA_SERIAL_PORT.begin(115200);  // Start HardwareSerial comms with driver
     #endif
 #endif
     pinMode(DEC_EN_PIN, OUTPUT);
@@ -197,7 +197,7 @@ void setup()
     // include TMC2209 UART pins
     pinMode(DEC_DIAG_PIN, INPUT);
     #ifdef DEC_SERIAL_PORT
-    DEC_SERIAL_PORT.begin(57600);  // Start HardwareSerial comms with driver
+    DEC_SERIAL_PORT.begin(115200);  // Start HardwareSerial comms with driver
     #endif
 #endif
 
@@ -208,7 +208,7 @@ void setup()
     // include TMC2209 UART pins
     pinMode(AZ_DIAG_PIN, INPUT);
         #ifdef AZ_SERIAL_PORT
-    AZ_SERIAL_PORT.begin(57600);  // Start HardwareSerial comms with driver
+    AZ_SERIAL_PORT.begin(115200);  // Start HardwareSerial comms with driver
         #endif
     #endif
 #endif
@@ -220,7 +220,7 @@ void setup()
     // include TMC2209 UART pins
     pinMode(ALT_DIAG_PIN, INPUT);
         #ifdef ALT_SERIAL_PORT
-    ALT_SERIAL_PORT.begin(57600);  // Start HardwareSerial comms with driver
+    ALT_SERIAL_PORT.begin(115200);  // Start HardwareSerial comms with driver
         #endif
     #endif
 #endif
@@ -233,7 +233,7 @@ void setup()
         // include TMC2209 UART pins
         #ifdef FOCUS_SERIAL_PORT
     LOG(DEBUG_FOCUS, "[FOCUS]: setup(): focus TMC2209U starting comms");
-    FOCUS_SERIAL_PORT.begin(57600);  // Start HardwareSerial comms with driver
+    FOCUS_SERIAL_PORT.begin(115200);  // Start HardwareSerial comms with driver
         #endif
     #endif
 #endif

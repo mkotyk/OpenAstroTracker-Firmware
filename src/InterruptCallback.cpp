@@ -20,6 +20,8 @@
 PUSH_NO_WARNINGS
         #include "libs/TimerInterrupt/TimerInterrupt.h"
 POP_NO_WARNINGS
+    #elif defined(ARDUINO_ARCH_STM32)
+    #pragma message("Using new stepper lib on STM32")
     #else
         #error Unrecognized board selected. Either implement interrupt code or define the board here.
     #endif

@@ -4,15 +4,12 @@
 
 #ifdef NEW_STEPPER_LIB
 
-    #ifdef ARDUINO_AVR_ATmega2560
+    #if defined(ARDUINO_AVR_ATmega2560) || defined(ARDUINO_ARCH_STM32)
         #include "Pin.h"
         #include "IntervalInterrupt.h"
         #include "Driver.h"
-
-PUSH_NO_WARNINGS
         #include "Stepper.h"
         #include "InterruptAccelStepper.h"
-POP_NO_WARNINGS
     #endif
 
     #define UINT32(x) static_cast<uint32_t>(x)

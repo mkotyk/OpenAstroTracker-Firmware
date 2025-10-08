@@ -31,7 +31,16 @@ PUSH_NO_WARNINGS
 POP_NO_WARNINGS
 
 //SoftwareSerial SoftSerial(GPS_SERIAL_RX_PIN, GPS_SERIAL_TX_PIN); // RX, TX
+    #pragma message("***** Using TinyGPS")
 TinyGPSPlus gps;
+#endif
+
+#ifdef DEBUG_SERIAL_PORT_DECLARATION
+	DEBUG_SERIAL_PORT_DECLARATION
+#endif
+
+#ifdef DRIVER_SERIAL_PORT_DECLARATION
+	DRIVER_SERIAL_PORT_DECLARATION
 #endif
 
 ////////////////////////////////////
