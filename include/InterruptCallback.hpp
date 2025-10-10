@@ -5,8 +5,6 @@
 // whatever timer is used for the hardware being run.
 //////////////////////////////////////
 
-#ifndef NEW_STEPPER_LIB
-
 // The callback function signature
 typedef void (*interrupt_callback_p)(void *);
 
@@ -16,7 +14,7 @@ class InterruptCallback
   public:
     // Requests the hardware to call the given callback with the given payload at the given interval in milliseconds.
     // The interrupts should be started before returning.
-    bool static setInterval(float intervalMs, interrupt_callback_p callback, void *payload);
+    bool static setInterval(uint32_t intervalMicroSeconds, interrupt_callback_p callback, void *payload);
 
     // Starts the timer interrupts (currently not called/used)
     void static start();
@@ -24,5 +22,3 @@ class InterruptCallback
     // Stops the timer interrupts (currently not called/used)
     void static stop();
 };
-
-#endif

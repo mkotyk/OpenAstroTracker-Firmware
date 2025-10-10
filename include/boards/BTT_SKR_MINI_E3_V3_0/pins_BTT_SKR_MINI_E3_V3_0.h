@@ -9,6 +9,9 @@
 #define SW_SERIAL_UART 0
 #define UART_CONNECTION_TEST_TXRX 1
 
+#define DEC_LIMIT_UP 90 // degrees from Home
+#define DEC_LIMIT_DOWN 40 // degrees from Home
+
 extern HardwareSerial DriverSerial;
 #define DRIVER_SERIAL_PORT_DECLARATION HardwareSerial DriverSerial(PC11, PC10);
 

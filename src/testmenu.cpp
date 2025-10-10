@@ -274,11 +274,7 @@ void TestMenu::listHardware() const
                 Serial.print(F("              Board: "));
                 Serial.println(*p);
                 Serial.print(F("    Stepper library: "));
-    #ifdef NEW_STEPPER_LIB
-                Serial.println(F("InterruptAccelStepper (new)"));
-    #else
                 Serial.println(F("AccelStepper (old)"));
-    #endif
                 break;
             case 1:
                 printStepperInfo(RA_STEPS, *p);
