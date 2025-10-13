@@ -110,8 +110,9 @@
     #define RA_RMSCURRENT  RA_MOTOR_CURRENT_RATING *(RA_OPERATING_CURRENT_SETTING / 100.0f) / 1.414f
     #define DEC_RMSCURRENT DEC_MOTOR_CURRENT_RATING *(DEC_OPERATING_CURRENT_SETTING / 100.0f) / 1.414f
 
-    #define RA_STALL_VALUE  100  // adjust this value if the RA autohoming sequence often false triggers, or triggers too late
-    #define DEC_STALL_VALUE 10   // adjust this value if the RA autohoming sequence often false triggers, or triggers too late
+    // Range is 0-255 - Ancedotal.  Didn't see SG_RESULT go above 30 on either axis in testing.
+    #define RA_STALL_VALUE  40  // adjust this value if the RA autohoming sequence often false triggers, or triggers too late
+    #define DEC_STALL_VALUE 40   // adjust this value if the RA autohoming sequence often false triggers, or triggers too late
 
     #ifndef RA_AUDIO_FEEDBACK
         #define RA_AUDIO_FEEDBACK                                                                                                          \

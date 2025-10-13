@@ -2898,9 +2898,12 @@ void Mount::loop()
     unsigned long now = millis();
 
 #if (DEBUG_LEVEL & DEBUG_MOUNT) && (DEBUG_LEVEL & DEBUG_VERBOSE)
-    if (now - _lastMountPrint > 2000)
+    if (now - _lastMountPrint > 200)
     {
-        LOG(DEBUG_MOUNT, "[MOUNT]: Status -> %s", getStatusString().c_str());
+        LOG(DEBUG_MOUNT, "[MOUNT]: Stallguard RA:%d DEC:%d",
+			_driverRA->SG_RESULT(),
+			_driverDEC->SG_RESULT());
+//        LOG(DEBUG_MOUNT, "[MOUNT]: Status -> %s", getStatusString().c_str());
         _lastMountPrint = now;
     }
 #endif

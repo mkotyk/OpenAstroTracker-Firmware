@@ -1,0 +1,21 @@
+
+GPS (GY-NEO6MV2)
+
+This board has a 3.3V regulator on it to take VCC inputs from 3-5V
+Outputs are 3V TTL
+
+VCC - 1 Yellow 5 +5V
+RX -  2 Orange 3
+TX -  3 Red    2
+GND - 4 Brown  4
+
+
+Gyro (MPU-6050)
+
+This board has a 3.3V regulator on it to tkae VCC inputs from 3-5V
+Outputs are 3V TTL
+
+VCC   1 Black	1 +5V
+GND   2 White	2
+SCL   3 Grey	8 (TX -> SCL)
+SDA   4 Purple  6 (RX -> SDA)

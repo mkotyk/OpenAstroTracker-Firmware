@@ -165,7 +165,7 @@
 // External sensors
 #if (USE_GPS == 0)
 // Baseline configuration without GPS is valid
-#elif defined(ESP32) || defined(__AVR_ATmega2560__)
+#elif defined(ESP32) || defined(__AVR_ATmega2560__) || (BOARD == BOARD_BTT_SKR_MINI_E3_V3_0)
 // GPS is supported on ESP32 and ATmega
 #else
     #error Unsupported GPS configuration. Use at own risk.
@@ -173,7 +173,7 @@
 
 #if (USE_GYRO_LEVEL == 0)
 // Baseline configuration without gyro is valid
-#elif defined(ESP32) || defined(__AVR_ATmega2560__)
+#elif defined(ESP32) || defined(__AVR_ATmega2560__) || (BOARD == BOARD_BTT_SKR_MINI_E3_V3_0)
 // Gyro is supported on ESP32 and ATmega
 #else
     #error Unsupported gyro configuration. Use at own risk.

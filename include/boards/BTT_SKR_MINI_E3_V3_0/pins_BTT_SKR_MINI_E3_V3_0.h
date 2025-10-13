@@ -9,9 +9,6 @@
 #define SW_SERIAL_UART 0
 #define UART_CONNECTION_TEST_TXRX 1
 
-#define DEC_LIMIT_UP 90 // degrees from Home
-#define DEC_LIMIT_DOWN 40 // degrees from Home
-
 extern HardwareSerial DriverSerial;
 #define DRIVER_SERIAL_PORT_DECLARATION HardwareSerial DriverSerial(PC11, PC10);
 
@@ -34,8 +31,6 @@ extern HardwareSerial DriverSerial;
 #ifndef RA_DRIVER_ADDRESS
     #define RA_DRIVER_ADDRESS 0
 #endif
-#define RA_MOTOR_CURRENT_RATING 1500
-#define RA_OPERATING_CURRENT_SETTING 50
 
 
 // DRIVER_TYPE_TMC2209_UART requires 4 digital pins in Arduino pin numbering - Y Axis
@@ -56,8 +51,6 @@ extern HardwareSerial DriverSerial;
 #ifndef DEC_DRIVER_ADDRESS
     #define DEC_DRIVER_ADDRESS 2
 #endif
-#define DEC_MOTOR_CURRENT_RATING 1500
-#define DEC_OPERATING_CURRENT_SETTING 50
 
 // DRIVER_TYPE_TMC2209_UART requires 4 digital pins in Arduino pin numbering - Z Axis
 #ifndef AZ_STEP_PIN
@@ -77,8 +70,6 @@ extern HardwareSerial DriverSerial;
 #ifndef AZ_DRIVER_ADDRESS
     #define AZ_DRIVER_ADDRESS 1
 #endif
-#define AZ_MOTOR_CURRENT_RATING 1500
-#define AZ_OPERATING_CURRENT_SETTING 50
 
 // DRIVER_TYPE_TMC2209_UART requires 4 digital pins in Arduino pin numbering - E0 port
 #ifndef ALT_STEP_PIN
@@ -98,24 +89,38 @@ extern HardwareSerial DriverSerial;
 #ifndef ALT_DRIVER_ADDRESS
     #define ALT_DRIVER_ADDRESS 3
 #endif
-#define ALT_MOTOR_CURRENT_RATING 1500
-#define ALT_OPERATING_CURRENT_SETTING 50
 
 // Board only has 4 stepper drivers, so no focus motor support
 
-// RA Homing pin for TMC2209 stall
-#ifndef RA_HOMING_SENSOR_PIN
-    #define RA_HOMING_SENSOR_PIN PC0 // TMC2209 Diag when jumper P2 is set
+// RA end switch pin for TMC2209 stall
+#define USE_RA_END_SWITCH 1
+#ifndef RA_END_SWITCH_ACTIVE_STATE
+#   define RA_END_SWITCH_ACTIVE_STATE LOW
+#endif
+#ifndef RA_ENDSWITCH_EAST_SENSOR_PIN
+#   define RA_ENDSWITCH_EAST_SENSOR_PIN PC0    // TMC2209 Diag when jumper P2 is set
+#endif
+#ifndef RA_ENDSWITCH_WEST_SENSOR_PIN
+#   define RA_ENDSWITCH_WEST_SENSOR_PIN PC0     // Same pin.  We expect the motor to stall when it hits the physical limit
 #endif
 
-// DEC Homing pin for TMC2209 stall
-#ifndef DEC_HOMING_SENSOR_PIN
-    #define DEC_HOMING_SENSOR_PIN PC1 // TMC2209 Diag when jumper P4 is set
+// DEC end switch pin for TMC2209 stall
+#define USE_DEC_END_SWITCH 1
+#ifndef DEC_END_SWITCH_ACTIVE_STATE
+#   define DEC_END_SWITCH_ACTIVE_STATE LOW
 #endif
+#ifndef DEC_ENDSWITCH_DOWN_SENSOR_PIN
+#   define DEC_ENDSWITCH_DOWN_SENSOR_PIN PC1 // TMC2209 Diag when jumper P4 is set
+#endif
+#ifndef DEC_ENDSWITCH_UP_SENSOR_PIN
+#   define DEC_ENDSWITCH_UP_SENSOR_PIN PC1
+#endif
+
 
 //GPS pin configuration
+//#define USE_GPS 1
 #ifndef GPS_SERIAL_PORT
-    #define GPS_SERIAL_PORT Serial2 // Port P3
+    #define GPS_SERIAL_PORT Serial2 // Port P3 for TFT Display
 #endif
 
 // DISPLAY_TYPE_LCD_KEYPAD requires 6 digital & 1 analog output in Arduino pin numbering
@@ -130,11 +135,11 @@ extern HardwareSerial DriverSerial;
 #endif
 
 //Serial port for external debugging
-// Use SWD (J11) for debugging
+// USART5 PD2(RX), PD3(TX)
 #if DEBUG_LEVEL > 0
-//    extern HardwareSerial DebugSerial;
-//    #define DEBUG_SERIAL_PORT_DECLARATION	HardwareSerial DebugSerial(USART2);
-    #define DEBUG_SERIAL_PORT Serial2
+    extern HardwareSerial DebugSerial;
+    #define DEBUG_SERIAL_PORT_DECLARATION	HardwareSerial DebugSerial(PD2, PD3);
+    #define DEBUG_SERIAL_PORT DebugSerial
     #define DEBUG_SEPARATE_SERIAL 1
     #define DEBUG_SERIAL_BAUDRATE 115200
 #endif
