@@ -15,6 +15,7 @@ Latitude::Latitude(int h, int m, int s) : DayTime(h, m, s)
 
 Latitude::Latitude(float inDegrees) : DayTime(inDegrees)
 {
+    _degrees = inDegrees;
 }
 
 void Latitude::checkHours()

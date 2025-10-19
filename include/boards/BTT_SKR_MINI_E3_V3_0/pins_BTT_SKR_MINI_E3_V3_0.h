@@ -90,32 +90,13 @@ extern HardwareSerial DriverSerial;
     #define ALT_DRIVER_ADDRESS 3
 #endif
 
-// Board only has 4 stepper drivers, so no focus motor support
+// Board only has 4 stepper drivers, so no focus motor support, or reconfigure focus from above
 
-// RA end switch pin for TMC2209 stall
-#define USE_RA_END_SWITCH 1
-#ifndef RA_END_SWITCH_ACTIVE_STATE
-#   define RA_END_SWITCH_ACTIVE_STATE LOW
-#endif
-#ifndef RA_ENDSWITCH_EAST_SENSOR_PIN
-#   define RA_ENDSWITCH_EAST_SENSOR_PIN PC0    // TMC2209 Diag when jumper P2 is set
-#endif
-#ifndef RA_ENDSWITCH_WEST_SENSOR_PIN
-#   define RA_ENDSWITCH_WEST_SENSOR_PIN PC0     // Same pin.  We expect the motor to stall when it hits the physical limit
-#endif
+// Enable RA TMC2209 stall homing
+#define RA_STALL_HOMING 1
 
-// DEC end switch pin for TMC2209 stall
-#define USE_DEC_END_SWITCH 1
-#ifndef DEC_END_SWITCH_ACTIVE_STATE
-#   define DEC_END_SWITCH_ACTIVE_STATE LOW
-#endif
-#ifndef DEC_ENDSWITCH_DOWN_SENSOR_PIN
-#   define DEC_ENDSWITCH_DOWN_SENSOR_PIN PC1 // TMC2209 Diag when jumper P4 is set
-#endif
-#ifndef DEC_ENDSWITCH_UP_SENSOR_PIN
-#   define DEC_ENDSWITCH_UP_SENSOR_PIN PC1
-#endif
-
+// Enable DEC TMC2209 stall homing
+#define DEC_STALL_HOMING 1
 
 //GPS pin configuration
 //#define USE_GPS 1

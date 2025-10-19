@@ -4,9 +4,11 @@
 #include "LcdMenu.hpp"
 #include "HallSensorHoming.hpp"
 #include "EndSwitches.hpp"
+#include "SoftEndStop.hpp"
 #include "Mount.hpp"
 #include "Sidereal.hpp"
 #include "MappedDict.hpp"
+#include "StallHoming.hpp"
 
 PUSH_NO_WARNINGS
 
@@ -1830,6 +1832,53 @@ void Mount::setSpeed(StepperAxis which, float speedDegsPerSec)
     }
 #endif
 }
+#if (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
+bool Mount::findHomeByStall(StepperAxis axis)
+{
+    switch (axis)
+    {
+        case RA_STEPS:
+        {
+            if (_raStallHoming == nullptr)
+            {
+                DayTime homeDayTime(_longitude);
+                // homeDayTime.subtractTime() // TODO: (MWK) some amount?!
+                homeDayTime.addTime(DayTime(POLARIS_RA_HOUR, POLARIS_RA_MINUTE, POLARIS_RA_SECOND));
+                long raHomingDegrees = static_cast<long>(getStepsPerDegree(RA_STEPS) * homeDayTime.getTotalHours());
+                _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN, raHomingDegrees);
+            }
+            _raStallHoming->findHome();
+            return true;
+        }
+        case DEC_STEPS:
+            if (_decStallHoming == nullptr)
+            {
+                // TODO: (MWK) This is specific to my build.  My guide scope hits the RA frame almost perfectly level.
+                long decHomeOffset = static_cast<long>(getStepsPerDegree(DEC_STEPS) * _latitude.getDegrees());
+                _decStallHoming = new StallHoming(*this, DEC_STEPS, DEC_DIAG_PIN, decHomeOffset);
+            }
+            _decStallHoming->findHome();
+            return true;
+        default:
+            return false;
+    }
+}
+
+void Mount::homeAxisMin(StepperAxis axis)
+{
+    switch (axis)
+    {
+        case RA_STEPS:
+            _raSoftEndStop->setMinPosition(getCurrentStepperPosition(axis));
+            break;
+        case DEC_STEPS:
+            _decSoftEndStop->setMinPosition(getCurrentStepperPosition(axis));
+            break;
+        default:
+            break;
+    }
+}
+#endif
 
 void Mount::getAZALTPositions(long &azPos, long &altPos)
 {
@@ -2716,6 +2765,9 @@ bool Mount::findHomeByHallSensor(StepperAxis axis, int initialDirection, int sea
     return false;
 }
 
+#endif
+
+#if (USE_HALL_SENSOR_RA_AUTOHOME == 1) || (USE_HALL_SENSOR_DEC_AUTOHOME == 1) || (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
 /////////////////////////////////
 //
 // processHomingProgress
@@ -2736,6 +2788,21 @@ void Mount::processHomingProgress()
         _decHoming->processHomingProgress();
     }
     #endif
+
+    #if RA_STALL_HOMING == 1
+    if (_raStallHoming != nullptr && !_raStallHoming->isIdleOrComplete())
+    {
+        _raStallHoming->processHomingProgress();
+    }
+    #endif
+
+    #if DEC_STALL_HOMING == 1
+    if (_decStallHoming != nullptr && !_decStallHoming->isIdleOrComplete())
+    {
+        _decStallHoming->processHomingProgress();
+    }
+    #endif
+
 }
 #endif
 
@@ -2763,10 +2830,31 @@ String Mount::getAutoHomingStates() const
         state += _decHoming->getLastResult();
     }
 #endif
+#if RA_STALL_HOMING == 1
+    if (_raStallHoming != nullptr && !_raStallHoming->isIdleOrComplete())
+    {
+        state += _raStallHoming->getHomingState(_raStallHoming->getHomingState());
+    }
+    else
+    {
+        state += _raStallHoming->getLastResult();
+    }
+#endif
+    state += "|";
+#if DEC_STALL_HOMING == 1
+    if (_decStallHoming != nullptr && !_decStallHoming->isIdleOrComplete())
+    {
+        state += _decStallHoming->getHomingState(_decStallHoming->getHomingState());
+    }
+    else
+    {
+        state += _decStallHoming->getLastResult();
+    }
+#endif
     return state;
 }
 
-#if (USE_RA_END_SWITCH == 1 || USE_DEC_END_SWITCH == 1)
+#if (USE_RA_END_SWITCH == 1 || USE_DEC_END_SWITCH == 1 || RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
 /////////////////////////////////
 //
 // End Switches RA/DEC
@@ -2775,13 +2863,19 @@ String Mount::getAutoHomingStates() const
 void Mount::setupEndSwitches()
 {
     #if (USE_RA_END_SWITCH == 1)
-    _raEndSwitch = new EndSwitch(
-        this, StepperAxis::RA_STEPS, RA_ENDSWITCH_EAST_SENSOR_PIN, RA_ENDSWITCH_WEST_SENSOR_PIN, RA_END_SWITCH_ACTIVE_STATE);
+    _raEndSwitch = new EndSwitch(this, RA_STEPS, RA_DIAG_PIN);
     #endif
 
     #if (USE_DEC_END_SWITCH == 1)
-    _decEndSwitch = new EndSwitch(
-        this, StepperAxis::DEC_STEPS, DEC_ENDSWITCH_DOWN_SENSOR_PIN, DEC_ENDSWITCH_UP_SENSOR_PIN, DEC_END_SWITCH_ACTIVE_STATE);
+    _decEndSwitch = new EndSwitch(this, DEC_STEPS, DEC_DIAG_PIN);
+    #endif
+
+    #if (RA_STALL_HOMING == 1)
+    _raSoftEndStop = new SoftEndStop(*this, RA_STEPS, getStepsPerDegree(RA_STEPS) * RA_RANGE_DEGREES);
+    #endif
+
+    #if (DEC_STALL_HOMING == 1)
+    _raSoftEndStop = new SoftEndStop(*this, DEC_STEPS, getStepsPerDegree(DEC_STEPS) * DEC_RANGE_DEGREES);
     #endif
 }
 #endif
@@ -3156,7 +3250,7 @@ void Mount::loop()
         }
     }
 
-#if (USE_HALL_SENSOR_RA_AUTOHOME == 1) || (USE_HALL_SENSOR_DEC_AUTOHOME == 1)
+#if (USE_HALL_SENSOR_RA_AUTOHOME == 1) || (USE_HALL_SENSOR_DEC_AUTOHOME == 1) || (RA_STALL_HOMING == 1) || (DEC_STALL_HOMING == 1)
     if (_mountStatus & STATUS_FINDING_HOME)
     {
         processHomingProgress();
@@ -3171,6 +3265,13 @@ void Mount::loop()
 #if (USE_DEC_END_SWITCH == 1)
     _decEndSwitch->processEndSwitchState();
     _decEndSwitch->checkSwitchState();
+#endif
+
+#if (RA_STALL_HOMING == 1)
+    _raSoftEndStop->checkLimits();
+#endif
+#if (DEC_STALL_HOMING == 1)
+    _decSoftEndStop->checkLimits();
 #endif
 
     _stepperWasRunning = raStillRunning || decStillRunning;
@@ -3361,6 +3462,51 @@ void Mount::setHome(bool clearZeroPos)
     //LOG(DEBUG_MOUNT_VERBOSE, "[MOUNT]: setHomePost: targetRA is %s", targetRA().ToString());
 }
 
+#if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
+void Mount::clearAxisStall(StepperAxis axis)
+{
+    uint32_t enablePin = 0;
+    switch (axis)
+    {
+        case RA_STEPS:
+            enablePin = RA_EN_PIN;
+            break;
+        case DEC_STEPS:
+            enablePin = DEC_EN_PIN;
+            break;
+#ifdef AZ_EN_PIN
+        case AZIMUTH_STEPS:
+            enablePin = AZ_EN_PIN;
+            break;
+#endif
+#ifdef ALT_EN_PIN
+        case ALTITUDE_STEPS:
+            enablePin = ALT_EN_PIN;
+            break;
+#endif
+#ifdef FOCUS_EN_PIN
+        case FOCUS_STEPS:
+            enablePin = FOCUS_EN_PIN;
+            break;
+#endif
+        default:
+            break;
+    }
+
+    if (enablePin > 0)
+    {
+        // Reset driver
+        digitalWrite(enablePin, HIGH);  // DISABLE, HIGH to disable
+        delayMicroseconds(50);
+        digitalWrite(enablePin, LOW);  // ENABLE, LOW to enable
+    }
+}
+
+void Mount::setSteppersIntoHomingProfile(StepperAxis axis, bool enable)
+{
+    // TODO: (MWK) Not sure if we need to disable stealth chop or anything else - Will check Marlin
+}
+#endif
 /////////////////////////////////
 //
 // getSpeed

@@ -36,6 +36,8 @@ class LcdMenu;
 class TMC2209Stepper;
 class HallSensorHoming;
 class EndSwitch;
+class SoftEndStop;
+class StallHoming;
 
 #define NORTH          B00000001
 #define EAST           B00000010
@@ -303,6 +305,13 @@ class Mount
     // Set the current stepper positions to be home.
     void setHome(bool clearZeroPos);
 
+#if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
+    void clearAxisStall(StepperAxis axis);
+
+    // Reconfigure the TMC drivers for stall guard if needed
+    void setSteppersIntoHomingProfile(StepperAxis axis, bool enable);
+#endif
+
     // Set the DEC limit position to the given angle in degrees (saved as DEC steps).
     // If upper is true, sets the upper limit, else the lower limit.
     // If limitAngle is 0, limit is set to current position.
@@ -371,7 +380,7 @@ class Mount
     // Set the speed of the given motor
     void setSpeed(StepperAxis which, float speedDegsPerSec);
 
-#if (USE_RA_END_SWITCH == 1) || (USE_DEC_END_SWITCH == 1)
+#if (USE_RA_END_SWITCH == 1) || (USE_DEC_END_SWITCH == 1) || (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
     void setupEndSwitches();
 #endif
 
@@ -396,8 +405,15 @@ class Mount
 
 #if (USE_HALL_SENSOR_RA_AUTOHOME == 1) || (USE_HALL_SENSOR_DEC_AUTOHOME == 1)
     bool findHomeByHallSensor(StepperAxis axis, int initialDirection, int searchDistance);
+#endif
+#if (USE_HALL_SENSOR_RA_AUTOHOME == 1) || (USE_HALL_SENSOR_DEC_AUTOHOME == 1) || (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
     void processHomingProgress();
 #endif
+#if (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
+    bool findHomeByStall(StepperAxis axis);
+    void homeAxisMin(StepperAxis axis);
+#endif
+
     String getAutoHomingStates() const;
 
     void setHomingOffset(StepperAxis axis, long offset);
@@ -579,6 +595,17 @@ class Mount
 #if USE_DEC_END_SWITCH == 1
     EndSwitch *_decEndSwitch;
 #endif
+
+#if RA_STALL_HOMING == 1
+    StallHoming *_raStallHoming;
+    SoftEndStop  *_raSoftEndStop;
+#endif
+
+#if DEC_STALL_HOMING == 1
+    StallHoming *_decStallHoming;
+    SoftEndStop  *_decSoftEndStop;
+#endif
+
 
     unsigned long _guideRaEndTime;
     unsigned long _guideDecEndTime;

@@ -110,9 +110,9 @@
     #define RA_RMSCURRENT  RA_MOTOR_CURRENT_RATING *(RA_OPERATING_CURRENT_SETTING / 100.0f) / 1.414f
     #define DEC_RMSCURRENT DEC_MOTOR_CURRENT_RATING *(DEC_OPERATING_CURRENT_SETTING / 100.0f) / 1.414f
 
-    // Range is 0-255 - Ancedotal.  Didn't see SG_RESULT go above 30 on either axis in testing.
-    #define RA_STALL_VALUE  40  // adjust this value if the RA autohoming sequence often false triggers, or triggers too late
-    #define DEC_STALL_VALUE 40   // adjust this value if the RA autohoming sequence often false triggers, or triggers too late
+    // Range is 0-255 - and is multiplied by in the TMC driver, then compared to SG_RESULT
+    #define RA_STALL_VALUE  20
+    #define DEC_STALL_VALUE 20
 
     #ifndef RA_AUDIO_FEEDBACK
         #define RA_AUDIO_FEEDBACK                                                                                                          \
@@ -163,11 +163,13 @@
         #error Unsupported RA wheel version, please recheck RA_WHEEL_VERSION
     #endif
 #endif
+#define RA_RANGE_DEGREES 270.0f // TODO: (MWK) This is a guess
 
 // the Circumference of the DEC wheel.
 #ifndef DEC_WHEEL_CIRCUMFERENCE
     #define DEC_WHEEL_CIRCUMFERENCE 565.5f
 #endif
+#define DEC_RANGE_DEGREES 180.0f // Horizon to horizon, unless you're up high somewhere
 
 #ifndef RA_TRANSMISSION
     #define RA_TRANSMISSION (RA_WHEEL_CIRCUMFERENCE / (RA_PULLEY_TEETH * GT2_BELT_PITCH))

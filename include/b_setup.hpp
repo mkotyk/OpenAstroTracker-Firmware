@@ -153,6 +153,11 @@ void setup()
     mount.setupEndSwitches();
 #endif
 
+#if (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
+    LOG(DEBUG_ANY, "[SYSTEM]: Init SoftEndStops...");
+    mount.setupEndSwitches();
+#endif
+
     /////////////////////////////////
     //   Microstepping/driver pins
     /////////////////////////////////
@@ -467,7 +472,8 @@ void setup()
 
 #else
     // 2 kHz updates (higher frequency interferes with serial communications and complete messes up OATControl communications)
-    if (!InterruptCallback::setInterval(500, stepperControlTimerCallback, &mount))
+    // (MWK): I've upped the bases timer to 50us from 500us. Using an STM32G0 ARM chip.
+    if (!InterruptCallback::setInterval(50, stepperControlTimerCallback, &mount))
     {
         LOG(DEBUG_MOUNT, "[SYSTEM]: CANNOT setup interrupt timer!");
     }

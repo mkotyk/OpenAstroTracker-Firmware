@@ -1641,6 +1641,11 @@ String MeadeCommandProcessor::handleMeadeMovement(String inCmd)
     }
     else if ((inCmd[0] == 'H') && (inCmd.length() > 2) && inCmd[1] == 'R')
     {
+#ifdef RA_STALL_HOMING
+        // Ignores direction and degree limits
+        return _mount->findHomeByStall(RA_STEPS) ? "1" : "0";
+#endif
+
 #if USE_HALL_SENSOR_RA_AUTOHOME == 1
         int distance = RA_HOMING_SENSOR_SEARCH_DEGREES;
         if (inCmd.length() > 3)
@@ -1662,6 +1667,11 @@ String MeadeCommandProcessor::handleMeadeMovement(String inCmd)
     }
     else if ((inCmd[0] == 'H') && (inCmd.length() > 2) && inCmd[1] == 'D')
     {
+#ifdef RA_STALL_HOMING
+        // Ignores direction and degree limits
+        return _mount->findHomeByStall(DEC_STEPS)  ? "1" : "0";
+#endif
+
 #if USE_HALL_SENSOR_DEC_AUTOHOME == 1
         int decDistance = DEC_HOMING_SENSOR_SEARCH_DEGREES;
         if (inCmd.length() > 3)
