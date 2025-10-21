@@ -1060,6 +1060,8 @@ String Mount::getMountHardwareInfo()
     ret = F("ESP32,");
 #elif defined(__AVR_ATmega2560__)
     ret = F("Mega,");
+#elif defined(ARDUINO_ARCH_STM32)
+    ret = F("STM32,");
 #endif
 
     ret += F("NEMA|");
@@ -1121,23 +1123,23 @@ String Mount::getMountHardwareInfo()
     ret += F("FOC,");
 #endif
 
-#if USE_HALL_SENSOR_RA_AUTOHOME == 1
+#if USE_HALL_SENSOR_RA_AUTOHOME == 1 || RA_STALL_HOMING == 1
     ret += F("HSAH,");
 #else
     ret += F("NO_HSAH,");
 #endif
-#if USE_HALL_SENSOR_DEC_AUTOHOME == 1
+#if USE_HALL_SENSOR_DEC_AUTOHOME == 1 || DEC_STALL_HOMING == 1
     ret += F("HSAV,");
 #else
     ret += F("NO_HSAV,");
 #endif
 
-#if (USE_RA_END_SWITCH == 1) || (USE_DEC_END_SWITCH == 1)
+#if (USE_RA_END_SWITCH == 1) || (USE_DEC_END_SWITCH == 1) || (RA_STALL_HOMING == 1) || (DEC_STALL_HOMING == 1)
     ret += F("ENDSW");
-    #if (USE_RA_END_SWITCH == 1)
+    #if (USE_RA_END_SWITCH == 1) || (RA_STALL_HOMING == 1)
     ret += F("_RA");
     #endif
-    #if (USE_DEC_END_SWITCH == 1)
+    #if (USE_DEC_END_SWITCH == 1) || (DEC_STALL_HOMING == 1)
     ret += F("_DEC");
     #endif
     ret += F(",");
