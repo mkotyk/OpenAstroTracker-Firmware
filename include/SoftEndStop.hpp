@@ -45,6 +45,11 @@ public:
         _state = SOFT_END_STOP_ACTIVE;
     }
 
+    void invalidate()
+    {
+        _state = SOFT_END_STOP_NOT_CONFIGURED;
+    }
+
     void clearTrigger()
     {
         _state = SOFT_END_STOP_ACTIVE;

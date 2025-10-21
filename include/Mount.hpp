@@ -306,6 +306,7 @@ class Mount
     void setHome(bool clearZeroPos);
 
 #if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
+    void axisStalled(StepperAxis axis);
     void clearAxisStall(StepperAxis axis);
 
     // Reconfigure the TMC drivers for stall guard if needed
@@ -412,6 +413,8 @@ class Mount
 #if (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
     bool findHomeByStall(StepperAxis axis);
     void homeAxisMin(StepperAxis axis);
+    int16_t getSgResult(StepperAxis axis);
+    int32_t getTSTEP(StepperAxis axis);
 #endif
 
     String getAutoHomingStates() const;
@@ -599,11 +602,13 @@ class Mount
 #if RA_STALL_HOMING == 1
     StallHoming *_raStallHoming;
     SoftEndStop  *_raSoftEndStop;
+    bool _stallRA = false;
 #endif
 
 #if DEC_STALL_HOMING == 1
     StallHoming *_decStallHoming;
     SoftEndStop  *_decSoftEndStop;
+    bool _stallDEC = false;
 #endif
 
 

@@ -52,8 +52,7 @@ HardwareTimer timer(TIM3);
 bool InterruptCallback::setInterval(uint32_t intervalMicroSeconds, interrupt_callback_p callback, void *payload)
 {
     timer.setMode(1, TIMER_OUTPUT_COMPARE);
-    timer.setPrescaleFactor(1);
-    timer.setCount(intervalMicroSeconds, MICROSEC_FORMAT);
+    timer.setOverflow(intervalMicroSeconds, MICROSEC_FORMAT);
     timer.attachInterrupt(1, std::bind(callback, payload));
     timer.resume();
     return true;

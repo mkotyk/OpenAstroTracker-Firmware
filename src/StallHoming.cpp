@@ -49,6 +49,7 @@ void StallHoming::ISRDiagTriggered()
 {
     if (_state == STALL_HOMING_FINDING_LIMIT)
     {
+        _pMount.axisStalled(_axis);
         _state = STALL_HOMING_LIMIT_FOUND;
     }
 }
@@ -64,7 +65,12 @@ bool StallHoming::findHome()
     _savedRate = _pMount.getSlewRate();
     _pMount.setSteppersIntoHomingProfile(_axis, true);
     _pMount.setSlewRate(4);
+
+    // IMPORTANT: Make sure all tracking and slewing are stopped before getting here,
+    // otherwise we overdrive the steppers when they hit.
+
     _pMount.setStatusFlag(STATUS_FINDING_HOME);
+    _state = STALL_HOMING_START_FIND_LIMIT;
 
     LOG(DEBUG_STEPPERS, "[HOMING]: Start homing procedure. Axis %d", (int) _axis);
     return true;
@@ -91,26 +97,25 @@ void StallHoming::processHomingProgress()
             break;
         case STALL_HOMING_FINDING_LIMIT:
             // The interrupt handles this and will transition into STALL_HOMING_LIMIT_FOUND
+
+            // Uncomment this line if you need to tune stallguard.
+            //LOG(DEBUG_STEPPERS, "[HOMING]: SG_RESULT: %d  TSTEP:%d", _pMount.getSgResult(_axis), _pMount.getTSTEP(_axis));
             break;
         case STALL_HOMING_LIMIT_FOUND:
             {
                 LOG(DEBUG_STEPPERS, "[HOMING]: Stall Homing Limit Found");
+                _state = STALL_HOMING_TRAVEL_TO_OFFSET;
                 _pMount.stopSlewing(_axis);
-                _pMount.waitUntilStopped(_axis);
                 _pMount.homeAxisMin(_axis);
                 _pMount.clearAxisStall(_axis);
                 _pMount.setSteppersIntoHomingProfile(_axis, false);
                 _pMount.moveStepperTo(_axis, _homeOffset);
-                _state = STALL_HOMING_TRAVEL_TO_OFFSET;
             }
             break;
         case STALL_HOMING_TRAVEL_TO_OFFSET:
-            if (_pMount.isAxisRunning(_axis))
+            if (_pMount.getCurrentStepperPosition(_axis) >= _homeOffset)
             {
-                if (_pMount.getCurrentStepperPosition(_axis) >= _homeOffset)
-                {
-                    _state = STALL_HOMING_SUCCESSFUL;
-                }
+                _state = STALL_HOMING_SUCCESSFUL;
             }
             break;
         case STALL_HOMING_SUCCESSFUL:

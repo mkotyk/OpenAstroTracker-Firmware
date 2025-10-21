@@ -110,10 +110,6 @@
     #define RA_RMSCURRENT  RA_MOTOR_CURRENT_RATING *(RA_OPERATING_CURRENT_SETTING / 100.0f) / 1.414f
     #define DEC_RMSCURRENT DEC_MOTOR_CURRENT_RATING *(DEC_OPERATING_CURRENT_SETTING / 100.0f) / 1.414f
 
-    // Range is 0-255 - and is multiplied by in the TMC driver, then compared to SG_RESULT
-    #define RA_STALL_VALUE  20
-    #define DEC_STALL_VALUE 20
-
     #ifndef RA_AUDIO_FEEDBACK
         #define RA_AUDIO_FEEDBACK                                                                                                          \
             0  // If one of these are set to 1, the respective driver will shut off the stealthchop mode, resulting in a audible whine

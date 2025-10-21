@@ -456,13 +456,15 @@ void Mount::configureRAdriver(Stream *serial, float rsense, byte driveraddress, 
         #endif
     LOG(DEBUG_STEPPERS, "[MOUNT]: Requested RA motor rms_current: %d mA", rmscurrent);
     _driverRA->rms_current(rmscurrent, 1.0f);  //holdMultiplier = 1 to set ihold = irun
-    _driverRA->toff(1);
+    _driverRA->toff(4);
     _driverRA->en_spreadCycle(RA_UART_STEALTH_MODE == 0);
     _driverRA->blank_time(24);
     _driverRA->microsteps(RA_TRACKING_MICROSTEPPING == 1 ? 0 : RA_TRACKING_MICROSTEPPING);  // System starts in tracking mode
     _driverRA->fclktrim(4);
-    _driverRA->TCOOLTHRS(0xFFFFF);  //xFFFFF);
-    _driverRA->semin(0);            //disable CoolStep so that current is consistent
+    _driverRA->TCOOLTHRS(RA_TCOOLTHRS);
+    _driverRA->semin(5);
+    _driverRA->semax(2);
+    _driverRA->sedn(0b01);
     _driverRA->SGTHRS(stallvalue);
     if (UART_Rx_connected)
     {
@@ -495,13 +497,15 @@ void Mount::configureRAdriver(uint16_t RA_SW_RX, uint16_t RA_SW_TX, float rsense
         #endif
     LOG(DEBUG_STEPPERS, "[MOUNT]: Requested RA motor rms_current: %d mA", rmscurrent);
     _driverRA->rms_current(rmscurrent, 1.0f);  //holdMultiplier = 1 to set ihold = irun
-    _driverRA->toff(1);
+    _driverRA->toff(4);
     _driverRA->en_spreadCycle(RA_UART_STEALTH_MODE == 0);
     _driverRA->blank_time(24);
-    _driverRA->semin(0);                                                                    //disable CoolStep so that current is consistent
+    _driverRA->semin(5);
+    _driverRA->semax(2);
+    _driverRA->sedn(0b01);
     _driverRA->microsteps(RA_TRACKING_MICROSTEPPING == 1 ? 0 : RA_TRACKING_MICROSTEPPING);  // System starts in tracking mode
     _driverRA->fclktrim(4);
-    _driverRA->TCOOLTHRS(0xFFFFF);  //xFFFFF);
+    _driverRA->TCOOLTHRS(RA_TCOOLTHRS);
     _driverRA->SGTHRS(stallvalue);
     if (UART_Rx_connected)
     {
@@ -539,13 +543,15 @@ void Mount::configureDECdriver(Stream *serial, float rsense, byte driveraddress,
         #endif
     LOG(DEBUG_STEPPERS, "[MOUNT]: Requested DEC motor rms_current: %d mA", rmscurrent);
     _driverDEC->rms_current(rmscurrent, 1.0f);  //holdMultiplier = 1 to set ihold = irun
-    _driverDEC->toff(1);
+    _driverDEC->toff(4);
     _driverDEC->en_spreadCycle(DEC_UART_STEALTH_MODE == 0);
     _driverDEC->blank_time(24);
     _driverDEC->microsteps(
         DEC_GUIDE_MICROSTEPPING == 1 ? 0 : DEC_GUIDE_MICROSTEPPING);  // If 1 then disable microstepping. Start with Guide microsteps.
-    _driverDEC->TCOOLTHRS(0xFFFFF);
-    _driverDEC->semin(0);  //disable CoolStep so that current is consistent
+    _driverDEC->TCOOLTHRS(DEC_TCOOLTHRS);
+    _driverDEC->semin(5);
+    _driverDEC->semax(2);
+    _driverDEC->sedn(0b01);
     _driverDEC->SGTHRS(stallvalue);
     if (UART_Rx_connected)
     {
@@ -578,13 +584,15 @@ void Mount::configureDECdriver(uint16_t DEC_SW_RX, uint16_t DEC_SW_TX, float rse
         #endif
     LOG(DEBUG_STEPPERS, "[MOUNT]: Requested DEC motor rms_current: %d mA", rmscurrent);
     _driverDEC->rms_current(rmscurrent, 1.0f);  //holdMultiplier = 1 to set ihold = irun
-    _driverDEC->toff(1);
+    _driverDEC->toff(4);
     _driverDEC->en_spreadCycle(DEC_UART_STEALTH_MODE == 0);
     _driverDEC->blank_time(24);
     _driverDEC->microsteps(
         DEC_GUIDE_MICROSTEPPING == 1 ? 0 : DEC_GUIDE_MICROSTEPPING);  // If 1 then disable microstepping. Start with Guide microsteps
-    _driverDEC->TCOOLTHRS(0xFFFFF);
-    _driverDEC->semin(0);  //disable CoolStep so that current is consistent
+    _driverDEC->TCOOLTHRS(DEV_TCOOLTHRS);
+    _driverDEC->semin(5);
+    _driverDEC->semax(2);
+    _driverDEC->sedn(0b01);
     _driverDEC->SGTHRS(stallvalue);
     if (UART_Rx_connected)
     {
@@ -626,7 +634,7 @@ void Mount::configureAZdriver(Stream *serial, float rsense, byte driveraddress, 
     _driverAZ->en_spreadCycle(0);
     _driverAZ->blank_time(24);
     _driverAZ->microsteps(AZ_MICROSTEPPING == 1 ? 0 : AZ_MICROSTEPPING);  // If 1 then disable microstepping
-    _driverAZ->TCOOLTHRS(0xFFFFF);                                        //xFFFFF);
+    _driverAZ->TCOOLTHRS(AZ_TCOOLTHRS);                                        //xFFFFF);
     _driverAZ->semin(0);                                                  //disable CoolStep so that current is consistent
     _driverAZ->SGTHRS(stallvalue);
     if (UART_Rx_connected)
@@ -664,7 +672,7 @@ void Mount::configureAZdriver(uint16_t AZ_SW_RX, uint16_t AZ_SW_TX, float rsense
     _driverAZ->en_spreadCycle(0);
     _driverAZ->blank_time(24);
     _driverAZ->microsteps(AZ_MICROSTEPPING == 1 ? 0 : AZ_MICROSTEPPING);  // If 1 then disable microstepping
-    _driverAZ->TCOOLTHRS(0xFFFFF);                                        //xFFFFF);
+    _driverAZ->TCOOLTHRS(AZ_TCOOLTHRS);                                        //xFFFFF);
     _driverAZ->semin(0);                                                  //disable CoolStep so that current is consistent
     _driverAZ->SGTHRS(stallvalue);
     if (UART_Rx_connected)
@@ -707,7 +715,7 @@ void Mount::configureALTdriver(Stream *serial, float rsense, byte driveraddress,
     _driverALT->en_spreadCycle(0);
     _driverALT->blank_time(24);
     _driverALT->microsteps(ALT_MICROSTEPPING == 1 ? 0 : ALT_MICROSTEPPING);  // If 1 then disable microstepping
-    _driverALT->TCOOLTHRS(0xFFFFF);                                          //xFFFFF);
+    _driverALT->TCOOLTHRS(ALT_TCOOLTHRS);                                          //xFFFFF);
     _driverALT->semin(0);                                                    //disable CoolStep so that current is consistent
     _driverALT->SGTHRS(stallvalue);
     if (UART_Rx_connected)
@@ -745,7 +753,7 @@ void Mount::configureALTdriver(uint16_t ALT_SW_RX, uint16_t ALT_SW_TX, float rse
     _driverALT->en_spreadCycle(0);
     _driverALT->blank_time(24);
     _driverALT->microsteps(ALT_MICROSTEPPING == 1 ? 0 : ALT_MICROSTEPPING);  // If 1 then disable microstepping
-    _driverALT->TCOOLTHRS(0xFFFFF);                                          //xFFFFF);
+    _driverALT->TCOOLTHRS(ALT_TCOOLTHRS);                                          //xFFFFF);
     _driverALT->semin(0);                                                    //disable CoolStep so that current is consistent
     _driverALT->SGTHRS(stallvalue);
         #if UART_CONNECTION_TEST_TXRX == 1
@@ -790,7 +798,7 @@ void Mount::configureFocusDriver(Stream *serial, float rsense, byte driveraddres
     _driverFocus->en_spreadCycle(FOCUS_UART_STEALTH_MODE == 0);
     _driverFocus->blank_time(24);
     _driverFocus->microsteps(FOCUS_MICROSTEPPING == 1 ? 0 : FOCUS_MICROSTEPPING);  // If 1 then disable microstepping
-    _driverFocus->TCOOLTHRS(0xFFFFF);                                              //xFFFFF);
+    _driverFocus->TCOOLTHRS(FOCUS_TCOOLTHRS);                                              //xFFFFF);
     _driverFocus->semin(0);                                                        //disable CoolStep so that current is consistent
     _driverFocus->SGTHRS(stallvalue);
         #if UART_CONNECTION_TEST_TXRX == 1
@@ -836,7 +844,7 @@ void Mount::configureFocusDriver(
     _driverFocus->en_spreadCycle(FOCUS_UART_STEALTH_MODE == 0);
     _driverFocus->blank_time(24);
     _driverFocus->microsteps(FOCUS_MICROSTEPPING == 1 ? 0 : FOCUS_MICROSTEPPING);  // If 1 then disable microstepping
-    _driverFocus->TCOOLTHRS(0xFFFFF);                                              //xFFFFF);
+    _driverFocus->TCOOLTHRS(FOCUS_TCOOLTHRS);                                              //xFFFFF);
     _driverFocus->semin(0);                                                        //disable CoolStep so that current is consistent
     _driverFocus->SGTHRS(stallvalue);
         #if UART_CONNECTION_TEST_TXRX == 1
@@ -1835,28 +1843,43 @@ void Mount::setSpeed(StepperAxis which, float speedDegsPerSec)
 #if (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
 bool Mount::findHomeByStall(StepperAxis axis)
 {
+    stopSlewing(ALL_DIRECTIONS | TRACKING);
+    waitUntilStopped(ALL_DIRECTIONS);
+
     switch (axis)
     {
         case RA_STEPS:
         {
             if (_raStallHoming == nullptr)
             {
+                _driverRA->TCOOLTHRS(RA_TCOOLTHRS);
+                _driverRA->semin(5);
+                _driverRA->semax(2);
+                _driverRA->sedn(0b01);
+                _driverRA->SGTHRS(RA_STALL_VALUE);
+
                 DayTime homeDayTime(_longitude);
-                // homeDayTime.subtractTime() // TODO: (MWK) some amount?!
                 homeDayTime.addTime(DayTime(POLARIS_RA_HOUR, POLARIS_RA_MINUTE, POLARIS_RA_SECOND));
-                long raHomingDegrees = static_cast<long>(getStepsPerDegree(RA_STEPS) * homeDayTime.getTotalHours());
-                _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN, raHomingDegrees);
+                long raHomingSteps= static_cast<long>(getStepsPerDegree(RA_STEPS) * (homeDayTime.getTotalHours() + 90.0f));
+                _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN, raHomingSteps);
             }
+            _raSoftEndStop->invalidate();
             _raStallHoming->findHome();
             return true;
         }
         case DEC_STEPS:
             if (_decStallHoming == nullptr)
             {
-                // TODO: (MWK) This is specific to my build.  My guide scope hits the RA frame almost perfectly level.
+                _driverDEC->TCOOLTHRS(DEC_TCOOLTHRS);
+                _driverDEC->semin(5);
+                _driverDEC->semax(2);
+                _driverDEC->sedn(0b01);
+                _driverDEC->SGTHRS(DEC_STALL_VALUE);
+
                 long decHomeOffset = static_cast<long>(getStepsPerDegree(DEC_STEPS) * _latitude.getDegrees());
                 _decStallHoming = new StallHoming(*this, DEC_STEPS, DEC_DIAG_PIN, decHomeOffset);
             }
+            _decSoftEndStop->invalidate();
             _decStallHoming->findHome();
             return true;
         default:
@@ -1869,13 +1892,42 @@ void Mount::homeAxisMin(StepperAxis axis)
     switch (axis)
     {
         case RA_STEPS:
+            _stepperRA->setCurrentPosition(0);
             _raSoftEndStop->setMinPosition(getCurrentStepperPosition(axis));
             break;
         case DEC_STEPS:
+            _stepperDEC->setCurrentPosition(0);
             _decSoftEndStop->setMinPosition(getCurrentStepperPosition(axis));
             break;
         default:
             break;
+    }
+}
+
+
+int16_t Mount::getSgResult(StepperAxis axis)
+{
+    switch (axis)
+    {
+        case RA_STEPS:
+            return _driverRA->SG_RESULT();
+        case DEC_STEPS:
+            return _driverDEC->SG_RESULT();
+        default:
+            return -1;
+    }
+}
+
+int32_t Mount::getTSTEP(StepperAxis axis)
+{
+    switch (axis)
+    {
+        case RA_STEPS:
+            return _driverRA->TSTEP();
+        case DEC_STEPS:
+            return _driverDEC->TSTEP();
+        default:
+            return -1;
     }
 }
 #endif
@@ -2904,7 +2956,7 @@ void Mount::delay(int ms)
 void Mount::interruptLoop()
 {
     // Only process guide pulses if we are tracking.
-    if ((_mountStatus & STATUS_GUIDE_PULSE) && (_mountStatus & STATUS_TRACKING))
+    if ((_mountStatus & STATUS_GUIDE_PULSE) && (_mountStatus & STATUS_TRACKING) && !(_mountStatus & STATUS_FINDING_HOME))
     {
         _stepperTRK->runSpeed();
         if (_mountStatus & STATUS_GUIDE_PULSE_DEC)
@@ -2914,12 +2966,12 @@ void Mount::interruptLoop()
         return;
     }
 
-    if (_mountStatus & STATUS_TRACKING)
+    if (_mountStatus & STATUS_TRACKING  && !(_mountStatus & STATUS_FINDING_HOME))
     {
         _stepperTRK->runSpeed();
     }
 
-    if (_mountStatus & STATUS_SLEWING)
+    if (_mountStatus & STATUS_SLEWING && !(_mountStatus & STATUS_FINDING_HOME))
     {
         if (_mountStatus & STATUS_SLEWING_MANUAL)
         {
@@ -2935,6 +2987,21 @@ void Mount::interruptLoop()
 
     if (_mountStatus & STATUS_FINDING_HOME)
     {
+#if RA_STALL_HOMING == 1
+        if (!_stallRA)
+        {
+            _stepperRA->run();
+        }
+#endif
+
+#if DEC_STALL_HOMING == 1
+        if (!_stallDEC)
+        {
+            _stepperDEC->run();
+        }
+#endif
+
+
     #if USE_HALL_SENSOR_RA_AUTOHOME == 1
         _stepperRA->run();
         if (_raHoming != nullptr)
@@ -3463,15 +3530,33 @@ void Mount::setHome(bool clearZeroPos)
 }
 
 #if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
+// Sets a flag that prevents the AcellStepper::run from continuing to emit pulses.
+// This is because the decellaration ramp takes time (like a second or so), and 
+// keeps driving the motor even though we're at a physical stop.
+void Mount::axisStalled(StepperAxis axis)
+{
+    switch (axis)
+    {
+        case RA_STEPS:
+            _stallRA = true;
+            break;
+        case DEC_STEPS:
+            _stallDEC = true;
+            break;
+    }
+}
+
 void Mount::clearAxisStall(StepperAxis axis)
 {
     uint32_t enablePin = 0;
     switch (axis)
     {
         case RA_STEPS:
+            _stallRA = false;
             enablePin = RA_EN_PIN;
             break;
         case DEC_STEPS:
+            _stallDEC = false;
             enablePin = DEC_EN_PIN;
             break;
 #ifdef AZ_EN_PIN
@@ -3729,6 +3814,7 @@ void Mount::moveSteppersTo(float targetRASteps, float targetDECSteps, StepperAxi
 
     if ((direction == RA_AND_DEC_STEPS) || (direction == DEC_STEPS))
     {
+#if DEC_STALL_HOMING == 0    // Stall homing uses SoftEndStops after homing to determine limits
         if (_decUpperLimit != 0)
         {
 #if DEBUG_LEVEL > 0
@@ -3750,6 +3836,7 @@ void Mount::moveSteppersTo(float targetRASteps, float targetDECSteps, StepperAxi
 #endif
             targetDECSteps = max(targetDECSteps, (float) _decLowerLimit);
         }
+#endif
 
         _stepperDEC->moveTo(targetDECSteps);
     }
