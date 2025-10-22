@@ -6,6 +6,4 @@ cmake-*
 CMakeLists.txt
 CMakeListsPrivate.txt
 build_cache
-
-Configuration_local*
 MeadeToWikiOutput.txt

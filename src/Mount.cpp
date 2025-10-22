@@ -1179,7 +1179,7 @@ void Mount::setSlewRate(int rate)
 
 /////////////////////////////////
 //
-// setSlewRate
+// getSlewRate
 //
 /////////////////////////////////
 int Mount::getSlewRate()
@@ -1478,6 +1478,14 @@ void Mount::startSlewingToTarget()
 // Takes any sync operations that have happened and tracking into account.
 void Mount::startSlewingToHome()
 {
+#if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
+    if (!(_axisHomed & DEC_STEPS) || !(_axisHomed & RA_STEPS))
+    {
+        findHomeByStall(DEC_STEPS);
+        findHomeByStall(RA_STEPS);
+        return;
+    }
+#endif
     stopGuiding();
 
     // Make sure we're slewing at full speed on a GoTo
@@ -1859,11 +1867,7 @@ bool Mount::findHomeByStall(StepperAxis axis)
                 _driverRA->semax(2);
                 _driverRA->sedn(0b01);
                 _driverRA->SGTHRS(RA_STALL_VALUE);
-
-                DayTime homeDayTime(_longitude);
-                homeDayTime.addTime(DayTime(POLARIS_RA_HOUR, POLARIS_RA_MINUTE, POLARIS_RA_SECOND));
-                long raHomingSteps= static_cast<long>(getStepsPerDegree(RA_STEPS) * (homeDayTime.getTotalHours() + 90.0f));
-                _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN, raHomingSteps);
+                _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN);
             }
             _raSoftEndStop->invalidate();
             _raStallHoming->findHome();
@@ -1877,9 +1881,7 @@ bool Mount::findHomeByStall(StepperAxis axis)
                 _driverDEC->semax(2);
                 _driverDEC->sedn(0b01);
                 _driverDEC->SGTHRS(DEC_STALL_VALUE);
-
-                long decHomeOffset = static_cast<long>(getStepsPerDegree(DEC_STEPS) * _latitude.getDegrees());
-                _decStallHoming = new StallHoming(*this, DEC_STEPS, DEC_DIAG_PIN, decHomeOffset);
+                _decStallHoming = new StallHoming(*this, DEC_STEPS, DEC_DIAG_PIN);
             }
             _decSoftEndStop->invalidate();
             _decStallHoming->findHome();
@@ -1889,18 +1891,34 @@ bool Mount::findHomeByStall(StepperAxis axis)
     }
 }
 
+// Set stepper current position such that 0 is the home position
 void Mount::homeAxisMin(StepperAxis axis)
 {
     switch (axis)
     {
         case RA_STEPS:
-            _stepperRA->setCurrentPosition(0);
-            _raSoftEndStop->setMinPosition(getCurrentStepperPosition(axis));
+        {
+            const long minSteps = -static_cast<long>(_stepsPerRADegree * siderealDegreesInHour * RA_TRACKING_LIMIT);
+            _currentRAStepperPosition = minSteps;
+            _stepperRA->setCurrentPosition(minSteps);
+            _stepperTRK->setCurrentPosition(minSteps);
+            _raSoftEndStop->setMinPosition(minSteps);
+            LOG(DEBUG_STEPPERS,"RA axis homed.  Stepper position: %d", minSteps);
+            _zeroPosRA = DayTime(POLARIS_RA_HOUR, POLARIS_RA_MINUTE, POLARIS_RA_SECOND);
+            _axisHomed |= RA_STEPS;
             break;
+        }
         case DEC_STEPS:
-            _stepperDEC->setCurrentPosition(0);
-            _decSoftEndStop->setMinPosition(getCurrentStepperPosition(axis));
+        {
+            const long minSteps = -static_cast<long>(_stepsPerDECDegree * _latitude.getDegrees());
+            _stepperDEC->setCurrentPosition(minSteps);
+            _stepperGUIDE->setCurrentPosition(minSteps);
+            _decSoftEndStop->setMinPosition(minSteps);
+            LOG(DEBUG_STEPPERS,"DEC axis homed.  Stepper position: %d", minSteps);
+            _zeroPosDEC = 0.0f;
+            _axisHomed |= DEC_STEPS;
             break;
+        }
         default:
             break;
     }
@@ -2925,11 +2943,13 @@ void Mount::setupEndSwitches()
     #endif
 
     #if (RA_STALL_HOMING == 1)
-    _raSoftEndStop = new SoftEndStop(*this, RA_STEPS, getStepsPerDegree(RA_STEPS) * RA_RANGE_DEGREES);
+    const long totalRaSteps = static_cast<long>(_stepsPerRADegree * siderealDegreesInHour * (RA_LIMIT_LEFT + RA_LIMIT_RIGHT));
+    _raSoftEndStop = new SoftEndStop(*this, RA_STEPS, totalRaSteps);
     #endif
 
     #if (DEC_STALL_HOMING == 1)
-    _raSoftEndStop = new SoftEndStop(*this, DEC_STEPS, getStepsPerDegree(DEC_STEPS) * DEC_RANGE_DEGREES);
+    const long totalDecSteps = static_cast<long>(_stepsPerDECDegree * DEC_RANGE_DEGREES);
+    _raSoftEndStop = new SoftEndStop(*this, DEC_STEPS, totalDecSteps);
     #endif
 }
 #endif
@@ -3589,10 +3609,6 @@ void Mount::clearAxisStall(StepperAxis axis)
     }
 }
 
-void Mount::setSteppersIntoHomingProfile(StepperAxis axis, bool enable)
-{
-    // TODO: (MWK) Not sure if we need to disable stealth chop or anything else - Will check Marlin
-}
 #endif
 /////////////////////////////////
 //

@@ -32,11 +32,10 @@ public:
         STALL_HOMING_TERMINATOR
     };
 
-    StallHoming(Mount& mount, StepperAxis axis, uint32_t diagPin, int32_t homeOffset)
+    StallHoming(Mount& mount, StepperAxis axis, uint32_t diagPin)
         : _pMount(mount)
         , _axis((axis))
         , _diagPin(diagPin)
-        , _homeOffset(homeOffset)
     {
         _state = STALL_HOMING_NOT_ACTIVE;
         _lastResult = STALL_HOMING_RESULT_HOMING_NEVER_RUN;
@@ -61,7 +60,6 @@ private:
     Mount &_pMount;
     StepperAxis _axis;
     uint32_t _diagPin;
-    int32_t _homeOffset;
     int _savedRate;
     State _state;
     Result _lastResult;

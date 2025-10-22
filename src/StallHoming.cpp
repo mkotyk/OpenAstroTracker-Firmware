@@ -62,14 +62,12 @@ void StallHoming::ISRDiagTriggered()
 bool StallHoming::findHome()
 {
     _lastResult = STALL_HOMING_RESULT_HOMING_IN_PROGRESS;
-    _savedRate = _pMount.getSlewRate();
-    _pMount.setSteppersIntoHomingProfile(_axis, true);
-    _pMount.setSlewRate(4);
-
     // IMPORTANT: Make sure all tracking and slewing are stopped before getting here,
     // otherwise we overdrive the steppers when they hit.
 
-    _pMount.setStatusFlag(STATUS_FINDING_HOME);
+    _savedRate = _pMount.getSlewRate();     // Wrong
+    _pMount.setSlewRate(4);                 // Wrong!
+    _pMount.setStatusFlag(STATUS_FINDING_HOME); // TODO: MWK This flags is not per-axis, this concurrent homing will break
     _state = STALL_HOMING_START_FIND_LIMIT;
 
     LOG(DEBUG_STEPPERS, "[HOMING]: Start homing procedure. Axis %d", (int) _axis);
@@ -99,7 +97,7 @@ void StallHoming::processHomingProgress()
             // The interrupt handles this and will transition into STALL_HOMING_LIMIT_FOUND
 
             // Uncomment this line if you need to tune stallguard.
-            //LOG(DEBUG_STEPPERS, "[HOMING]: SG_RESULT: %d  TSTEP:%d", _pMount.getSgResult(_axis), _pMount.getTSTEP(_axis));
+            // LOG(DEBUG_STEPPERS, "[HOMING]: SG_RESULT: %d  TSTEP:%d", _pMount.getSgResult(_axis), _pMount.getTSTEP(_axis));
             break;
         case STALL_HOMING_LIMIT_FOUND:
             {
@@ -108,12 +106,11 @@ void StallHoming::processHomingProgress()
                 _pMount.stopSlewing(_axis);
                 _pMount.homeAxisMin(_axis);
                 _pMount.clearAxisStall(_axis);
-                _pMount.setSteppersIntoHomingProfile(_axis, false);
-                _pMount.moveStepperTo(_axis, _homeOffset);
+                _pMount.moveStepperTo(_axis, 0);
             }
             break;
         case STALL_HOMING_TRAVEL_TO_OFFSET:
-            if (_pMount.getCurrentStepperPosition(_axis) >= _homeOffset)
+            if (_pMount.getCurrentStepperPosition(_axis) == 0)
             {
                 _state = STALL_HOMING_SUCCESSFUL;
             }
@@ -125,11 +122,11 @@ void StallHoming::processHomingProgress()
                     getHomingState(STALL_HOMING_NOT_ACTIVE).c_str());
                 _lastResult = STALL_HOMING_RESULT_SUCCEEDED;
                 _state = STALL_HOMING_NOT_ACTIVE;
-                _pMount.setSlewRate(_savedRate);
-                _pMount.clearStatusFlag(STATUS_FINDING_HOME);
+                _pMount.setSlewRate(_savedRate);// TODO: MWK This should be per axis
+                _pMount.clearStatusFlag(STATUS_FINDING_HOME);// TODO: MWK This should be per axis
                 if (_wasTracking)
                 {
-                    _pMount.startSlewing(TRACKING);
+                    _pMount.startSlewing(TRACKING);// TODO: MWK This should be per axis
                 }
             }
             break;
@@ -140,8 +137,8 @@ void StallHoming::processHomingProgress()
                     "[HOMING]: Failed to home! Restoring Rate setting. Advance to %s",
                     getHomingState(STALL_HOMING_NOT_ACTIVE).c_str());
                 _state = STALL_HOMING_NOT_ACTIVE;
-                _pMount.setSlewRate(_savedRate);
-                _pMount.clearStatusFlag(STATUS_FINDING_HOME);
+                _pMount.setSlewRate(_savedRate);// TODO: MWK This should be per axis
+                _pMount.clearStatusFlag(STATUS_FINDING_HOME);// TODO: MWK This should be per axis
             }
             break;
 

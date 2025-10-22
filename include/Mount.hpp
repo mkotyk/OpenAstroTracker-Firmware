@@ -308,9 +308,6 @@ class Mount
 #if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
     void axisStalled(StepperAxis axis);
     void clearAxisStall(StepperAxis axis);
-
-    // Reconfigure the TMC drivers for stall guard if needed
-    void setSteppersIntoHomingProfile(StepperAxis axis, bool enable);
 #endif
 
     // Set the DEC limit position to the given angle in degrees (saved as DEC steps).
@@ -611,6 +608,9 @@ class Mount
     bool _stallDEC = false;
 #endif
 
+#if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
+    int _axisHomed = 0;
+#endif
 
     unsigned long _guideRaEndTime;
     unsigned long _guideDecEndTime;
