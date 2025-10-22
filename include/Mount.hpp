@@ -71,7 +71,8 @@ class StallHoming;
 #define STATUS_GUIDE_PULSE_RA    0B0000000001000000
 #define STATUS_GUIDE_PULSE_DEC   0B0000000000100000
 #define STATUS_GUIDE_PULSE_MASK  0B0000000011100000
-#define STATUS_FINDING_HOME      0B0010000000000000
+#define STATUS_FINDING_HOME_RA   0B0010000000000000
+#define STATUS_FINDING_HOME_DEC  0B0100000000000000
 
 struct LocalDate {
     int year;
@@ -633,6 +634,7 @@ class Mount
     LocalDate _localStartDate;
     DayTime _localStartTime;
     long _localStartTimeSetMillis;
+    static const float _speedFactor[5];
 };
 
 #endif

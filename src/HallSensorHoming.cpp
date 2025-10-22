@@ -82,7 +82,7 @@ bool HallSensorHoming::findHomeByHallSensor(int initialDirection, int searchDist
     _homingData.searchDistance = searchDistance;
 
     _pMount->setSlewRate(4);
-    _pMount->setStatusFlag(STATUS_FINDING_HOME);
+    _pMount->setStatusFlag(STATUS_FINDING_HOME_RA);
 
     LOG(DEBUG_STEPPERS,
         "[HOMING]: Start homing procedure. Axis %d, StepsPerDegree: %l, SearchDist: %d",
@@ -408,7 +408,7 @@ void HallSensorHoming::processHomingProgress()
                 _homingData.state = HomingState::HOMING_NOT_ACTIVE;
                 _pMount->setHome(false);
                 _pMount->setSlewRate(_homingData.savedRate);
-                _pMount->clearStatusFlag(STATUS_FINDING_HOME);
+                _pMount->clearStatusFlag(STATUS_FINDING_HOME_RA);
                 if (_wasTracking)
                 {
                     _pMount->startSlewing(TRACKING);
@@ -423,7 +423,7 @@ void HallSensorHoming::processHomingProgress()
                     getHomingState(HomingState::HOMING_NOT_ACTIVE).c_str());
                 _pMount->setSlewRate(_homingData.savedRate);
                 _homingData.state = HomingState::HOMING_NOT_ACTIVE;
-                _pMount->clearStatusFlag(STATUS_FINDING_HOME);
+                _pMount->clearStatusFlag(STATUS_FINDING_HOME_RA);
                 _pMount->setStatusFlag(STATUS_SLEWING | STATUS_SLEWING_TO_TARGET);
                 _pMount->moveStepperTo(_axis, _homingData.startPos);
             }

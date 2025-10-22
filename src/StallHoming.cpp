@@ -62,14 +62,7 @@ void StallHoming::ISRDiagTriggered()
 bool StallHoming::findHome()
 {
     _lastResult = STALL_HOMING_RESULT_HOMING_IN_PROGRESS;
-    // IMPORTANT: Make sure all tracking and slewing are stopped before getting here,
-    // otherwise we overdrive the steppers when they hit.
-
-    _savedRate = _pMount.getSlewRate();     // Wrong
-    _pMount.setSlewRate(4);                 // Wrong!
-    _pMount.setStatusFlag(STATUS_FINDING_HOME); // TODO: MWK This flags is not per-axis, this concurrent homing will break
     _state = STALL_HOMING_START_FIND_LIMIT;
-
     LOG(DEBUG_STEPPERS, "[HOMING]: Start homing procedure. Axis %d", (int) _axis);
     return true;
 }
@@ -122,12 +115,6 @@ void StallHoming::processHomingProgress()
                     getHomingState(STALL_HOMING_NOT_ACTIVE).c_str());
                 _lastResult = STALL_HOMING_RESULT_SUCCEEDED;
                 _state = STALL_HOMING_NOT_ACTIVE;
-                _pMount.setSlewRate(_savedRate);// TODO: MWK This should be per axis
-                _pMount.clearStatusFlag(STATUS_FINDING_HOME);// TODO: MWK This should be per axis
-                if (_wasTracking)
-                {
-                    _pMount.startSlewing(TRACKING);// TODO: MWK This should be per axis
-                }
             }
             break;
 
@@ -137,8 +124,6 @@ void StallHoming::processHomingProgress()
                     "[HOMING]: Failed to home! Restoring Rate setting. Advance to %s",
                     getHomingState(STALL_HOMING_NOT_ACTIVE).c_str());
                 _state = STALL_HOMING_NOT_ACTIVE;
-                _pMount.setSlewRate(_savedRate);// TODO: MWK This should be per axis
-                _pMount.clearStatusFlag(STATUS_FINDING_HOME);// TODO: MWK This should be per axis
             }
             break;
 

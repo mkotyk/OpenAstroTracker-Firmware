@@ -1169,11 +1169,10 @@ void Mount::setBacklashCorrection(int steps)
 /////////////////////////////////
 void Mount::setSlewRate(int rate)
 {
-    _moveRate           = clamp(rate, 1, 4);
-    float speedFactor[] = {0, 0.05, 0.2, 0.5, 1.0};
-    LOG(DEBUG_MOUNT, "[MOUNT]: setSlewRate, rate is %d -> %f", _moveRate, speedFactor[_moveRate]);
-    _stepperDEC->setMaxSpeed(speedFactor[_moveRate] * _maxDECSpeed);
-    _stepperRA->setMaxSpeed(speedFactor[_moveRate] * _maxRASpeed);
+    _moveRate           = clamp(rate, 1, std::size(_speedFactor));
+    LOG(DEBUG_MOUNT, "[MOUNT]: setSlewRate, rate is %d -> %f", _moveRate, _speedFactor[_moveRate]);
+    _stepperDEC->setMaxSpeed(_speedFactor[_moveRate] * _maxDECSpeed);
+    _stepperRA->setMaxSpeed(_speedFactor[_moveRate] * _maxRASpeed);
     LOG(DEBUG_MOUNT, "[MOUNT]: setSlewRate, new speeds are RA: %f  DEC: %f", _stepperRA->maxSpeed(), _stepperDEC->maxSpeed());
 }
 
@@ -1869,7 +1868,9 @@ bool Mount::findHomeByStall(StepperAxis axis)
                 _driverRA->SGTHRS(RA_STALL_VALUE);
                 _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN);
             }
+            _stepperRA->setMaxSpeed(_maxRASpeed);
             _raSoftEndStop->invalidate();
+            setStatusFlag(STATUS_FINDING_HOME_RA);
             _raStallHoming->findHome();
             return true;
         }
@@ -1883,7 +1884,10 @@ bool Mount::findHomeByStall(StepperAxis axis)
                 _driverDEC->SGTHRS(DEC_STALL_VALUE);
                 _decStallHoming = new StallHoming(*this, DEC_STEPS, DEC_DIAG_PIN);
             }
+            // Bypass slewing logic as it's not per-axis
+            _stepperDEC->setMaxSpeed(_maxDECSpeed);
             _decSoftEndStop->invalidate();
+            setStatusFlag(STATUS_FINDING_HOME_DEC);
             _decStallHoming->findHome();
             return true;
         default:
@@ -1906,6 +1910,9 @@ void Mount::homeAxisMin(StepperAxis axis)
             LOG(DEBUG_STEPPERS,"RA axis homed.  Stepper position: %d", minSteps);
             _zeroPosRA = DayTime(POLARIS_RA_HOUR, POLARIS_RA_MINUTE, POLARIS_RA_SECOND);
             _axisHomed |= RA_STEPS;
+            _mountStatus &= ~STATUS_FINDING_HOME_RA;
+            // Reset to original slewing rate  only for this axis
+            _stepperRA->setMaxSpeed(_speedFactor[_moveRate] * _maxRASpeed);
             break;
         }
         case DEC_STEPS:
@@ -1917,6 +1924,9 @@ void Mount::homeAxisMin(StepperAxis axis)
             LOG(DEBUG_STEPPERS,"DEC axis homed.  Stepper position: %d", minSteps);
             _zeroPosDEC = 0.0f;
             _axisHomed |= DEC_STEPS;
+            _mountStatus &= ~STATUS_FINDING_HOME_DEC;
+            // Reset to original slewing rate  only for this axis
+            _stepperDEC->setMaxSpeed(_speedFactor[_moveRate] * _maxDECSpeed);
             break;
         }
         default:
@@ -2506,7 +2516,7 @@ bool Mount::isParking() const
 /////////////////////////////////
 bool Mount::isFindingHome() const
 {
-    return _mountStatus & STATUS_FINDING_HOME;
+    return _mountStatus & STATUS_FINDING_HOME_RA || _mountStatus & STATUS_FINDING_HOME_DEC;
 }
 
 /////////////////////////////////
@@ -2648,15 +2658,22 @@ void Mount::stopSlewing(int direction)
     {
         LOG(DEBUG_STEPPERS, "[STEPPERS]: stopSlewing: DEC stepper stop()");
         _stepperDEC->stop();
+
+        // Be able to abort homing in case things are going horrible
+        if (_mountStatus & STATUS_FINDING_HOME_DEC)
+        {
+            _mountStatus &= ~STATUS_FINDING_HOME_DEC;
+        }
     }
 
     if ((direction & (WEST | EAST)) != 0)
     {
         LOG(DEBUG_STEPPERS, "[STEPPERS]: stopSlewing: RA stepper stop()");
         _stepperRA->stop();
-        if (isFindingHome())
+        // Be able to abort homing in case things are going horrible
+        if (_mountStatus & STATUS_FINDING_HOME_RA)
         {
-            _mountStatus &= ~STATUS_FINDING_HOME;
+            _mountStatus &= ~STATUS_FINDING_HOME_RA;
         }
     }
 }
@@ -2978,7 +2995,7 @@ void Mount::delay(int ms)
 void Mount::interruptLoop()
 {
     // Only process guide pulses if we are tracking.
-    if ((_mountStatus & STATUS_GUIDE_PULSE) && (_mountStatus & STATUS_TRACKING) && !(_mountStatus & STATUS_FINDING_HOME))
+    if ((_mountStatus & STATUS_GUIDE_PULSE) && (_mountStatus & STATUS_TRACKING) && !isFindingHome())
     {
         _stepperTRK->runSpeed();
         if (_mountStatus & STATUS_GUIDE_PULSE_DEC)
@@ -2988,12 +3005,12 @@ void Mount::interruptLoop()
         return;
     }
 
-    if (_mountStatus & STATUS_TRACKING  && !(_mountStatus & STATUS_FINDING_HOME))
+    if (_mountStatus & STATUS_TRACKING  && !isFindingHome())
     {
         _stepperTRK->runSpeed();
     }
 
-    if (_mountStatus & STATUS_SLEWING && !(_mountStatus & STATUS_FINDING_HOME))
+    if (_mountStatus & STATUS_SLEWING && !isFindingHome())
     {
         if (_mountStatus & STATUS_SLEWING_MANUAL)
         {
@@ -3007,7 +3024,7 @@ void Mount::interruptLoop()
         }
     }
 
-    if (_mountStatus & STATUS_FINDING_HOME)
+    if (isFindingHome())
     {
 #if RA_STALL_HOMING == 1
         if (!_stallRA)
@@ -3340,7 +3357,7 @@ void Mount::loop()
     }
 
 #if (USE_HALL_SENSOR_RA_AUTOHOME == 1) || (USE_HALL_SENSOR_DEC_AUTOHOME == 1) || (RA_STALL_HOMING == 1) || (DEC_STALL_HOMING == 1)
-    if (_mountStatus & STATUS_FINDING_HOME)
+    if (isFindingHome())
     {
         processHomingProgress();
     }
@@ -4420,3 +4437,6 @@ float Mount::checkRALimit()
 
     return RALimit - homeCurrentDeltaRA;
 }
+
+
+const float Mount::_speedFactor[] = {0, 0.05, 0.2, 0.5, 1.0};
