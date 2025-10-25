@@ -293,6 +293,7 @@ class Mount
     // Gets the position in one of eight directions or tracking
     long getCurrentStepperPosition(int direction);
     long getCurrentStepperPosition(StepperAxis axis);
+    int direction(StepperAxis axis);
 
     // Set the tracking stepper position
     void setTrackingStepperPos(long stepPos);

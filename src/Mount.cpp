@@ -1852,8 +1852,7 @@ void Mount::setSpeed(StepperAxis which, float speedDegsPerSec)
 #if (RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1)
 bool Mount::findHomeByStall(StepperAxis axis)
 {
-    stopSlewing(ALL_DIRECTIONS | TRACKING);
-    waitUntilStopped(ALL_DIRECTIONS);
+    stopGuiding();
 
     switch (axis)
     {
@@ -1868,6 +1867,10 @@ bool Mount::findHomeByStall(StepperAxis axis)
                 _driverRA->SGTHRS(RA_STALL_VALUE);
                 _raStallHoming = new StallHoming(*this, RA_STEPS, RA_DIAG_PIN);
             }
+            // Bypass slewing logic as it's not per-axis
+            _mountStatus &= ~STATUS_TRACKING;
+            _stepperTRK->stop();
+            _stepperRA->stop();
             _stepperRA->setMaxSpeed(_maxRASpeed);
             _raSoftEndStop->invalidate();
             setStatusFlag(STATUS_FINDING_HOME_RA);
@@ -1885,6 +1888,7 @@ bool Mount::findHomeByStall(StepperAxis axis)
                 _decStallHoming = new StallHoming(*this, DEC_STEPS, DEC_DIAG_PIN);
             }
             // Bypass slewing logic as it's not per-axis
+            _stepperDEC->stop();
             _stepperDEC->setMaxSpeed(_maxDECSpeed);
             _decSoftEndStop->invalidate();
             setStatusFlag(STATUS_FINDING_HOME_DEC);
@@ -1905,7 +1909,7 @@ void Mount::homeAxisMin(StepperAxis axis)
             const long minSteps = -static_cast<long>(_stepsPerRADegree * siderealDegreesInHour * RA_TRACKING_LIMIT);
             _currentRAStepperPosition = minSteps;
             _stepperRA->setCurrentPosition(minSteps);
-            _stepperTRK->setCurrentPosition(minSteps);
+            _stepperTRK->setCurrentPosition(0);
             _raSoftEndStop->setMinPosition(minSteps);
             LOG(DEBUG_STEPPERS,"RA axis homed.  Stepper position: %d", minSteps);
             _zeroPosRA = DayTime(POLARIS_RA_HOUR, POLARIS_RA_MINUTE, POLARIS_RA_SECOND);
@@ -1917,9 +1921,9 @@ void Mount::homeAxisMin(StepperAxis axis)
         }
         case DEC_STEPS:
         {
-            const long minSteps = -static_cast<long>(_stepsPerDECDegree * _latitude.getDegrees());
+            const long minSteps = -static_cast<long>(_stepsPerDECDegree * DEC_LIMIT_DOWN);
             _stepperDEC->setCurrentPosition(minSteps);
-            _stepperGUIDE->setCurrentPosition(minSteps);
+            _stepperGUIDE->setCurrentPosition(0);
             _decSoftEndStop->setMinPosition(minSteps);
             LOG(DEBUG_STEPPERS,"DEC axis homed.  Stepper position: %d", minSteps);
             _zeroPosDEC = 0.0f;
@@ -2572,6 +2576,14 @@ void Mount::startSlewing(int direction)
 
             if (direction & NORTH)
             {
+#if DEC_STALL_HOMING == 1
+                if (!_decSoftEndStop->canMoveTowardMax(*this))
+                {
+                    LOG(DEBUG_STEPPERS, "[SOFTENDSTOP]: startSlewing(N): DEC already at upper limit");
+                    return;
+                }
+#endif
+
                 long targetLocation = _stepsPerDECDegree * DEC_LIMIT_UP;
                 if (_decUpperLimit != 0)
                 {
@@ -2592,6 +2604,13 @@ void Mount::startSlewing(int direction)
 
             if (direction & SOUTH)
             {
+#if DEC_STALL_HOMING == 1
+                if (!_decSoftEndStop->canMoveTowardMin(*this))
+                {
+                    LOG(DEBUG_STEPPERS, "[SOFTENDSTOP]: startSlewing(S): DEC already at lowerlimit");
+                    return;
+                }
+#endif
                 long targetLocation = -_stepsPerDECDegree * DEC_LIMIT_DOWN;
                 if (_decLowerLimit != 0)
                 {
@@ -2613,6 +2632,13 @@ void Mount::startSlewing(int direction)
             const float trackedHours = (_stepperTRK->currentPosition() / _trackingSpeed) / 3600.0F;  // steps / steps/s / 3600 = hours
             if (direction & EAST)
             {
+#if RA_STALL_HOMING == 1
+                if (!_raSoftEndStop->canMoveTowardMin(*this))
+                {
+                    LOG(DEBUG_STEPPERS, "[SOFTENDSTOP]: startSlewing(E): RA already at lowerlimit");
+                    return;
+                }
+#endif
                 // We need to subtract the distance tracked from the physical RA home coordinate
                 long targetEastPos = _stepsPerRADegree * 15.0 * (RA_PHYSICAL_LIMIT + trackedHours);
                 LOG(DEBUG_STEPPERS,
@@ -2624,6 +2650,13 @@ void Mount::startSlewing(int direction)
             }
             if (direction & WEST)
             {
+#if RA_STALL_HOMING == 1
+                if (!_raSoftEndStop->canMoveTowardMax(*this))
+                {
+                    LOG(DEBUG_STEPPERS, "[SOFTENDSTOP]: startSlewing(W): RA already at upper limit");
+                    return;
+                }
+#endif
                 // We need to add the distance tracked from the physical RA home coordinate
                 long targetWestPos = _stepsPerRADegree * 15.0 * (min(RA_PHYSICAL_LIMIT, RA_TRACKING_LIMIT) - trackedHours);
                 LOG(DEBUG_STEPPERS,
@@ -2960,13 +2993,13 @@ void Mount::setupEndSwitches()
     #endif
 
     #if (RA_STALL_HOMING == 1)
-    const long totalRaSteps = static_cast<long>(_stepsPerRADegree * siderealDegreesInHour * (RA_LIMIT_LEFT + RA_LIMIT_RIGHT));
-    _raSoftEndStop = new SoftEndStop(*this, RA_STEPS, totalRaSteps);
+    const long totalRaSteps = static_cast<long>(_stepsPerRADegree * siderealDegreesInHour * (RA_LIMIT_LEFT + RA_TRACKING_LIMIT));
+    _raSoftEndStop = new SoftEndStop(RA_STEPS, totalRaSteps, static_cast<long>(_stepsPerRADegree));
     #endif
 
     #if (DEC_STALL_HOMING == 1)
-    const long totalDecSteps = static_cast<long>(_stepsPerDECDegree * DEC_RANGE_DEGREES);
-    _raSoftEndStop = new SoftEndStop(*this, DEC_STEPS, totalDecSteps);
+    const long totalDecSteps = static_cast<long>(_stepsPerDECDegree * (DEC_LIMIT_DOWN + DEC_LIMIT_UP));
+    _decSoftEndStop = new SoftEndStop(DEC_STEPS, totalDecSteps, static_cast<long>(_stepsPerDECDegree / 2));
     #endif
 }
 #endif
@@ -3097,13 +3130,17 @@ void Mount::loop()
 
     unsigned long now = millis();
 
+#if (RA_STALL_HOMING == 1)
+    _raSoftEndStop->checkLimits(*this);
+#endif
+#if (DEC_STALL_HOMING == 1)
+    _decSoftEndStop->checkLimits(*this);
+#endif
+
 #if (DEBUG_LEVEL & DEBUG_MOUNT) && (DEBUG_LEVEL & DEBUG_VERBOSE)
     if (now - _lastMountPrint > 200)
     {
-        LOG(DEBUG_MOUNT, "[MOUNT]: Stallguard RA:%d DEC:%d",
-			_driverRA->SG_RESULT(),
-			_driverDEC->SG_RESULT());
-//        LOG(DEBUG_MOUNT, "[MOUNT]: Status -> %s", getStatusString().c_str());
+        LOG(DEBUG_MOUNT, "[MOUNT]: Status -> %s", getStatusString().c_str());
         _lastMountPrint = now;
     }
 #endif
@@ -3373,13 +3410,6 @@ void Mount::loop()
     _decEndSwitch->checkSwitchState();
 #endif
 
-#if (RA_STALL_HOMING == 1)
-    _raSoftEndStop->checkLimits();
-#endif
-#if (DEC_STALL_HOMING == 1)
-    _decSoftEndStop->checkLimits();
-#endif
-
     _stepperWasRunning = raStillRunning || decStillRunning;
 #if INFO_DISPLAY_TYPE != INFO_DISPLAY_TYPE_NONE
     updateInfoDisplay();
@@ -3535,6 +3565,9 @@ void Mount::getDecLimitPositions(float &lowerLimit, float &upperLimit)
 /////////////////////////////////
 void Mount::setHome(bool clearZeroPos)
 {
+#if RA_STALL_HOMING == 1 && DEC_STALL_HOMING == 1
+    LOG(DEBUG_MOUNT, "[MOUNT]: setHome() ignored.  Using stall homing.");
+#else
     LOG(DEBUG_MOUNT, "[MOUNT]: setHome() called. Stopping steppers");
     bool wasTracking = isSlewingTRK();
     stopSlewing(ALL_DIRECTIONS);
@@ -3566,6 +3599,7 @@ void Mount::setHome(bool clearZeroPos)
     //LOG(DEBUG_MOUNT_VERBOSE, "[MOUNT]: setHomePost: currentRA is %s", currentRA().ToString());
     //LOG(DEBUG_MOUNT_VERBOSE, "[MOUNT]: setHomePost: zeroPos is %s", _zeroPosRA.ToString());
     //LOG(DEBUG_MOUNT_VERBOSE, "[MOUNT]: setHomePost: targetRA is %s", targetRA().ToString());
+#endif
 }
 
 #if RA_STALL_HOMING == 1 || DEC_STALL_HOMING == 1
@@ -4438,5 +4472,15 @@ float Mount::checkRALimit()
     return RALimit - homeCurrentDeltaRA;
 }
 
+int Mount::direction(StepperAxis axis)
+{
+    switch(axis) {
+        case RA_STEPS:
+            return clamp(_stepperRA->distanceToGo(), -1L, 1L);
+        case DEC_STEPS:
+            return clamp(_stepperDEC->distanceToGo(), -1L, 1L);
+    }
+    return 0;
+}
 
 const float Mount::_speedFactor[] = {0, 0.05, 0.2, 0.5, 1.0};

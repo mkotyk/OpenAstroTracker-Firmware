@@ -22,27 +22,36 @@ public:
     {
         SOFT_END_STOP_NOT_CONFIGURED,
         SOFT_END_STOP_ACTIVE,
-        SOFT_END_STOP_TRIGGERED,
     };
 
-    SoftEndStop(Mount& mount, const StepperAxis axis, const long rangeSteps)
-        : SoftEndStop(mount, axis, rangeSteps, mount.getStepsPerDegree(axis) * 0.5f) {}
-
-    SoftEndStop(Mount& mount, const StepperAxis axis, const long rangeSteps, const long paddingSteps)
-        : _pMount(mount)
-        , _axis(axis)
+    SoftEndStop(const StepperAxis axis, const long rangeSteps, const long paddingSteps)
+        : _axis(axis)
+        , _state(SOFT_END_STOP_NOT_CONFIGURED)
         , _rangeSteps(rangeSteps)
         , _paddingSteps(paddingSteps)
+        , _minPositionSteps(0L)
+        , _maxPositionSteps(0L)
     {
-        _state = SOFT_END_STOP_NOT_CONFIGURED;
+        LOG(DEBUG_MOUNT, "[SOFTENDSTOP] %s axis: Range steps:%l Padding steps:%l",
+            _axis == RA_STEPS ? F("RA") : F("DEC"),
+            _rangeSteps,
+            _paddingSteps
+        );
     }
 
     void setMinPosition(const long minPositionSteps)
     {
         // Set stepper min/max absolute positions with some padding so we don't risk physical contact
         _minPositionSteps = minPositionSteps + _paddingSteps;
-        _maxPositionSteps = (_minPositionSteps + _rangeSteps) - _paddingSteps;
+        _maxPositionSteps = minPositionSteps + _rangeSteps - _paddingSteps;
         _state = SOFT_END_STOP_ACTIVE;
+        LOG(DEBUG_MOUNT, "[SOFTENDSTOP] %s axis: Range steps:%l Padding steps:%l Min steps:%l Max steps:%l",
+            _axis == RA_STEPS ? F("RA") : F("DEC"),
+            _rangeSteps,
+            _paddingSteps,
+            _minPositionSteps,
+            _maxPositionSteps
+        );
     }
 
     void invalidate()
@@ -50,24 +59,39 @@ public:
         _state = SOFT_END_STOP_NOT_CONFIGURED;
     }
 
-    void clearTrigger()
+    bool canMoveTowardMin(Mount& mount)
     {
-        _state = SOFT_END_STOP_ACTIVE;
+        auto position = mount.getCurrentStepperPosition(_axis);
+        return _state != SOFT_END_STOP_ACTIVE || position > _minPositionSteps;
     }
 
-    bool checkLimits()
+    bool canMoveTowardMax(Mount& mount)
+    {
+        auto position = mount.getCurrentStepperPosition(_axis);
+        return _state != SOFT_END_STOP_ACTIVE || position < _maxPositionSteps;
+    }
+
+    bool checkLimits(Mount& mount)
     {
         if (_state == SOFT_END_STOP_ACTIVE)
         {
-            auto minTriggered = _pMount.getCurrentStepperPosition(_axis) <= _minPositionSteps;
-            auto maxTriggered = _pMount.getCurrentStepperPosition(_axis) >= _maxPositionSteps;
+            auto position = mount.getCurrentStepperPosition(_axis);
+            auto direction = mount.direction(_axis);
+            auto minTriggered = position <= _minPositionSteps && direction < 0;
+            auto maxTriggered = position >= _maxPositionSteps && direction > 0;
 
             if (minTriggered || maxTriggered)
             {
-                _state = SOFT_END_STOP_TRIGGERED;
-                _pMount.stopSlewing(_axis);
-                _pMount.stopGuiding(_axis);
-                _pMount.waitUntilStopped(_axis);
+                LOG(DEBUG_MOUNT, "[SOFTENDSTOP] %s axis %s triggered: Min steps:%l Position:%l  Max steps:%l",
+                        _axis == RA_STEPS ? F("RA") : F("DEC"),
+                        minTriggered ? F("MIN") : F("MAX"),
+                        _minPositionSteps,
+                        position,
+                        _maxPositionSteps
+                   );
+                mount.stopSlewing(_axis);
+                mount.stopGuiding(_axis);
+                mount.waitUntilStopped(_axis);
             }
             return minTriggered || maxTriggered;
         }
@@ -80,12 +104,10 @@ public:
         return _state;
     }
 private:
-    Mount & _pMount;
     const StepperAxis _axis;
     State _state;
-
-    long _paddingSteps;
     long _rangeSteps;
+    long _paddingSteps;
     long _minPositionSteps;
     long _maxPositionSteps;
 };

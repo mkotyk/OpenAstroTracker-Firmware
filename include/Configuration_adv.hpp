@@ -159,13 +159,11 @@
         #error Unsupported RA wheel version, please recheck RA_WHEEL_VERSION
     #endif
 #endif
-#define RA_RANGE_DEGREES 270.0f // TODO: (MWK) This is a guess
 
 // the Circumference of the DEC wheel.
 #ifndef DEC_WHEEL_CIRCUMFERENCE
     #define DEC_WHEEL_CIRCUMFERENCE 565.5f
 #endif
-#define DEC_RANGE_DEGREES 180.0f // Horizon to horizon, unless you're up high somewhere
 
 #ifndef RA_TRANSMISSION
     #define RA_TRANSMISSION (RA_WHEEL_CIRCUMFERENCE / (RA_PULLEY_TEETH * GT2_BELT_PITCH))
